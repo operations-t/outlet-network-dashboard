@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Outlet Network Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="./assets/theme.css">
+<script src="./assets/core.js"></script>
+</head>
+<body>
+<main class="page">
+  <header class="topbar">
+    <div class="brand">
+      <h1>Outlet Network Dashboard</h1>
+      <span class="brand-tag" id="monthChip">—</span>
+    </div>
+    <div class="actions">
+      <a class="button home" href="https://operations-t.github.io/Dashboard-Portal/" target="_blank" rel="noopener noreferrer">⌂ Home</a>
+      <a class="button is-active" href="./index.html" aria-current="page">Network overview</a>
+      <a class="button" href="./insights.html">Growth &amp; momentum ›</a>
+      <button class="button primary" id="clearFilters" type="button">Clear filters</button>
+      <button class="button" id="sidebarToggle" type="button" aria-controls="filterPanel" aria-expanded="true">Hide sidebar</button>
+      <button class="button icon-only" data-theme-toggle type="button" aria-pressed="false">🌙 Dark</button>
+      <label class="button" for="salesFileInput">Upload sales<input id="salesFileInput" class="sr-only" type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.csv"></label>
+      <label class="button" for="fileInput">Upload master<input id="fileInput" class="sr-only" type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.csv"></label>
+      <button class="button" id="resetData" type="button">Reset</button>
+    </div>
+  </header>
+  <div class="message" id="message" role="status" aria-live="polite"></div>
+
+  <div class="shell">
+    <aside class="sidebar" id="filterPanel">
+      <div class="sidebar-head"><div><span class="section-kicker">Controls</span><h2>Explore outlet network</h2><p id="snapshotText">Loading snapshot…</p></div></div>
+      <div class="period-box">
+        <div class="period-mode-toggle" role="group" aria-label="Sales period mode">
+          <button class="active" type="button" data-sales-period-mode="through">Through date</button>
+          <button type="button" data-sales-period-mode="range">Date range</button>
+        </div>
+        <div class="date-stack" id="throughDateWrap"><label for="salesThroughDate">Through<input id="salesThroughDate" type="date"></label></div>
+        <div class="date-stack" id="rangeDateWrap" hidden><div class="date-pair"><label for="salesRangeStart">From<input id="salesRangeStart" type="date"></label><label for="salesRangeEnd">To<input id="salesRangeEnd" type="date"></label></div></div>
+      </div>
+      <div class="sidebar-fields" id="filterFields"></div>
+      <p class="filter-summary" id="filterSummary"></p>
+    </aside>
+
+    <section class="content">
+      <section class="card" id="salesPerformance">
+        <div class="section-head">
+          <div><span class="section-kicker">Performance</span><h2>Sales performance</h2><p id="salesPeriodText">Target, actual and month-end projection.</p></div>
+        </div>
+        <div class="section-body">
+          <div class="sales-scorecards">
+            <article class="sales-scorecard">
+              <div class="sales-scorecard-head"><div><h3 class="sales-scorecard-title">Selected period</h3><p class="sales-scorecard-subtitle" id="actualCardSubtitle">Till-date actual vs target</p></div><span id="actualSalesStatus" class="sales-status watch">No target</span></div>
+              <div class="sales-comparison-grid">
+                <div class="sales-metric"><p class="sales-metric-label">Target</p><p id="actualTarget" class="sales-metric-value">—</p></div>
+                <div class="sales-metric"><p class="sales-metric-label">Actual</p><p id="actualActual" class="sales-metric-value">—</p></div>
+                <div class="sales-metric"><p class="sales-metric-label">Gap</p><p id="actualGap" class="sales-metric-value">—</p></div>
+                <div class="sales-metric"><p class="sales-metric-label">Achievement</p><p id="actualAchievement" class="sales-metric-value">—</p></div>
+              </div>
+              <div id="actualProgress" class="sales-progress watch"><span id="actualProgressFill" style="width:0"></span></div><p class="sales-card-note" id="actualNote"></p>
+            </article>
+            <article class="sales-scorecard projected">
+              <div class="sales-scorecard-head"><div><h3 class="sales-scorecard-title">Month-end projection</h3><p class="sales-scorecard-subtitle">Friday / Saturday / Sun–Thu run-rate model</p></div><span id="projectedSalesStatus" class="sales-status watch">No target</span></div>
+              <div class="sales-comparison-grid">
+                <div class="sales-metric"><p class="sales-metric-label">Monthly target</p><p id="projectedTarget" class="sales-metric-value">—</p></div>
+                <div class="sales-metric"><p class="sales-metric-label">Projected</p><p id="projectedActual" class="sales-metric-value">—</p></div>
+                <div class="sales-metric"><p class="sales-metric-label">Gap</p><p id="projectedGap" class="sales-metric-value">—</p></div>
+                <div class="sales-metric"><p class="sales-metric-label">Achievement</p><p id="projectedAchievement" class="sales-metric-value">—</p></div>
+              </div>
+              <div id="projectedProgress" class="sales-progress watch"><span id="projectedProgressFill" style="width:0"></span></div><p class="sales-card-note" id="projectedNote"></p>
+            </article>
+            <article class="sales-scorecard lastmonth">
+              <div class="sales-scorecard-head"><div><h3 class="sales-scorecard-title">Month on month</h3><p class="sales-scorecard-subtitle" id="momSubtitle">Projected vs last month actual</p></div><span id="momStatus" class="sales-status watch">No base</span></div>
+              <div class="sales-comparison-grid">
+                <div class="sales-metric"><p class="sales-metric-label" id="momLastLabel">Last month</p><p id="momLast" class="sales-metric-value">—</p></div>
+                <div class="sales-metric"><p class="sales-metric-label">Projected</p><p id="momProjected" class="sales-metric-value">—</p></div>
+                <div class="sales-metric"><p class="sales-metric-label">Change</p><p id="momChange" class="sales-metric-value">—</p></div>
+                <div class="sales-metric"><p class="sales-metric-label">Growth</p><p id="momGrowthValue" class="sales-metric-value">—</p></div>
+              </div>
+              <div id="momProgress" class="sales-progress watch"><span id="momProgressFill" style="width:0"></span></div><p class="sales-card-note" id="momNote"></p>
+            </article>
+          </div>
+
+          <details class="sales-breakdown" id="salesBreakdownDetails" open>
+            <summary><h3 id="salesBreakdownTitle">Regional Head Actual vs Target</h3><span class="collapse-indicator" aria-hidden="true"></span></summary>
+            <div class="sales-breakdown-content">
+              <div class="sales-breakdown-toolbar">
+                <div class="segmented"><button type="button" data-sales-breakdown-mode="zonal">Zonal</button><button class="active" type="button" data-sales-breakdown-mode="regional">Regional Head</button></div>
+                <button class="button tiny" id="downloadBreakdownCsv" type="button">⭳ CSV</button>
+              </div>
+              <div class="sales-breakdown-head breakdown-grid">
+                <span>Name</span><span>Target (TD)</span><span>Actual (TD)</span><span id="breakdownLastMonthHead">Last month</span>
+                <span>Monthly target</span><span>Projected</span><span>MoM</span><span>Ach.</span>
+              </div>
+              <div id="salesBreakdownRows" class="sales-breakdown-rows scroll-chain"></div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="kpis" id="kpis">
+        <article class="kpi"><p class="kpi-label">Total outlets</p><p class="kpi-value" id="kpiOutlets">—</p><p class="kpi-note">Selected network</p></article>
+        <article class="kpi"><p class="kpi-label">Total SFT</p><p class="kpi-value" id="kpiSft">—</p><p class="kpi-note">Valid floor area</p></article>
+        <article class="kpi"><p class="kpi-label">Average SFT</p><p class="kpi-value" id="kpiAvgSft">—</p><p class="kpi-note">Per outlet</p></article>
+        <article class="kpi good"><p class="kpi-label">Own stores</p><p class="kpi-value" id="kpiOwn">—</p><p class="kpi-note">Store status</p></article>
+        <article class="kpi"><p class="kpi-label">PNP</p><p class="kpi-value" id="kpiPnp">—</p><p class="kpi-note">PNP outlets</p></article>
+        <article class="kpi warn"><p class="kpi-label">Opened latest year</p><p class="kpi-value" id="kpiLatestYear">—</p><p class="kpi-note" id="kpiLatestYearNote">Latest launch year</p></article>
+        <article class="kpi warn"><p class="kpi-label">Opened latest month</p><p class="kpi-value" id="kpiLatestMonth">—</p><p class="kpi-note" id="kpiLatestMonthNote">Latest launch month</p></article>
+      </section>
+
+      <div class="chart-grid" id="chartGrid">
+        <section class="chart-card" id="divisionChartCard">
+          <div class="section-head"><div><h2>Outlet coverage by division</h2><p>Outlet count in selected view</p></div></div>
+          <div class="chart-body"><div id="divisionChart" class="bar-list"></div></div>
+        </section>
+
+        <section class="chart-card">
+          <div class="section-head">
+            <div><h2>Number of outlets overseeing</h2><p>Click an outlet-count number to open those outlets in Detail View</p></div>
+            <div class="section-head-actions">
+              <div class="segmented"><button type="button" data-oversight-mode="zonal">Zonal Qty</button><button class="active" type="button" data-oversight-mode="regional">RHO Qty</button></div>
+              <button class="button tiny" id="downloadOversightCsv" type="button">⭳ CSV</button>
+            </div>
+          </div>
+          <div class="chart-body"><div class="chart-scroll scroll-chain"><div id="oversightChart" class="bar-list"></div></div></div>
+        </section>
+
+        <section class="chart-card">
+          <div class="section-head"><div><h2>Portfolio mix</h2><p>Format, store status and PNP status · click a number for Detail View</p></div></div>
+          <div class="chart-body"><div class="mix-grid"><div class="mix-item" id="formatChart"></div><div class="mix-item" id="statusMixChart"></div><div class="mix-item" id="pnpMixChart"></div></div></div>
+        </section>
+
+        <section class="chart-card">
+          <div class="section-head"><div><h2>Location-type mix</h2><p>Outlet count by Location Type</p></div></div>
+          <div class="chart-body"><div id="locationChart" class="bar-list"></div></div>
+        </section>
+
+        <details class="chart-card collapsible-card full" id="launchCard" open>
+          <summary class="section-head">
+            <div><h2>Outlet openings by launch year</h2><p id="launchSubtitle">Cohort size, floor area and how each opening cohort is trading now</p></div>
+            <span class="collapse-indicator" aria-hidden="true"></span>
+          </summary>
+          <div class="chart-body">
+            <div class="sales-breakdown-toolbar">
+              <div class="segmented">
+                <button class="active" type="button" data-launch-mode="year">By launch year</button>
+                <button type="button" data-launch-mode="month">This year, month-wise</button>
+              </div>
+              <button class="button tiny" id="downloadLaunchCsv" type="button">⭳ CSV</button>
+            </div>
+            <div class="sales-breakdown-head breakdown-grid">
+              <span id="launchHeadLabel">Launch year</span><span>Outlets</span><span>Total SFT</span><span>Avg SFT</span>
+              <span id="launchLastMonthHead">Last month</span><span>Projected</span><span>MoM</span><span>Share</span>
+            </div>
+            <div id="launchRows" class="sales-breakdown-rows scroll-chain"></div>
+          </div>
+        </details>
+      </div>
+
+      <section class="card" id="directoryCard">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">Directory</span>
+            <h2 id="directoryTitle">DETAIL VIEW — Outlet-wise Zone Distribution</h2>
+            <p id="tableNote">Click a chart number to drill into matching outlets. Click a header to sort; double-click to filter.</p>
+            <p id="detailDrillStatus" class="detail-drill-status" hidden></p>
+          </div>
+          <div class="directory-controls">
+            <button class="button" id="clearDetailDrill" type="button" hidden>Clear clicked filter</button>
+            <div class="table-search"><input id="outletSearch" type="search" placeholder="Search displayed rows…"></div>
+            <button class="button" id="downloadDirectoryCsv" type="button">⭳ Download CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll" id="tableScroll"><table><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table></div>
+          <div class="table-note-line"><span id="tableCount">0 outlets shown</span><span>Scroll inside table; at the top/bottom the page continues scrolling.</span></div>
+        </div>
+      </section>
+      <p class="footer-note">Outlet Network Dashboard · GitHub Pages</p>
+    </section>
+  </div>
+</main>
+
+<script>
+(() => {
+'use strict';
+const {
+  byId, text, num, nf, compactNumber, currency, display, signedPercent, prettyDate, monthLabel,
+  headerKey, salesDateValue, FIELD_DEFINITIONS, FILTERS, refreshSalesCalculations, allSalesDates,
+  actualSalesDates, sum, performanceTone, growthTone, emptyFilters, loadFilters, saveFilters,
+  filterMatches, createFilterPanel, downloadCsv, stamp, loadDashboardData, setMessage, clearMessage,
+  enableScrollChain, initTheme, palette
+} = window.OND;
+
+const TABLE_ORDER = ['code','outletName','targetToDate','salesToDate','salesGapToDate','salesAchievement',
+  'lastMonthSales','momGrowth','projectedVsLastMonth','monthlyTarget','projectedSales','projectedGap','projectedAchievement',
+  'leader','rhoId','rhoPhone','zonal','zonalId','zonalPhone','format','division','district','cityType','floorType',
+  'layoutShape','status','pnpStatus','sft','launchDate','locationType','regionalHead','area','density','incomeLevel'];
+const ALWAYS_TABLE = ['targetToDate','salesToDate','salesGapToDate','salesAchievement','lastMonthSales','momGrowth',
+  'projectedVsLastMonth','monthlyTarget','projectedSales','projectedGap','projectedAchievement'];
+const MONEY_COLS = ['sft','salesToDate','targetToDate','salesGapToDate','lastMonthSales','projectedVsLastMonth','monthlyTarget','projectedSales','projectedGap'];
+const PCT_COLS = ['salesAchievement','projectedAchievement','momGrowth'];
+const SIGNED_COLS = ['salesGapToDate','projectedGap','projectedVsLastMonth','momGrowth'];
+
+let baseRows = [], rows = [], source = {}, meta = {};
+let salesPeriodMode = 'through', salesBreakdownMode = 'regional', oversightMode = 'regional', launchMode = 'year';
+let tableQuery = '', tableSort = { key: null, direction: 1 }, tableHeaderFilters = {};
+let currentTableExport = { columns: [], rows: [] };
+let detailDrill = null;
+let filters = loadFilters();
+let lastMonthName = 'Last month';
+let breakdownExport = [], oversightExport = [], launchExport = [];
+let filterPanel = null;
+
+/* ---------- selection ---------- */
+function fieldValue(row, key) { const f = FILTERS.find(x => x.key === key); return f && f.get ? f.get(row) : row[key]; }
+function availableKey(key) {
+  if (key === 'outletIdentity') return baseRows.some(r => text(r.code) || text(r.outletName));
+  return baseRows.some(r => text(r[key]) !== '' && r[key] !== null && r[key] !== undefined);
+}
+function selectedRows() { return rows.filter(r => FILTERS.every(f => filterMatches(fieldValue(r, f.key), filters[f.key]))); }
+
+/* ---------- scorecards ---------- */
+function fillSalesScorecard(prefix, target, actual, note) {
+  const achievement = target ? actual / target : null;
+  const gap = Number.isFinite(actual) && Number.isFinite(target) ? actual - target : null;
+  const tone = performanceTone(achievement);
+  const st = byId(prefix + 'SalesStatus');
+  st.textContent = tone.label; st.className = 'sales-status ' + tone.key;
+  const set = (id, v, cls = '') => { const e = byId(id); e.textContent = v; e.className = 'sales-metric-value' + (cls ? ' ' + cls : ''); };
+  set(prefix + 'Target', currency(target));
+  set(prefix + 'Actual', currency(actual));
+  set(prefix + 'Gap', currency(gap), gap === null ? '' : gap >= 0 ? 'positive' : 'negative');
+  set(prefix + 'Achievement', Number.isFinite(achievement) ? Math.round(achievement * 100) + '%' : '—',
+    tone.key === 'good' ? 'positive' : tone.key === 'bad' ? 'negative' : '');
+  const p = byId(prefix + 'Progress');
+  p.className = 'sales-progress ' + tone.key;
+  byId(prefix + 'ProgressFill').style.width = Number.isFinite(achievement) ? Math.min(100, achievement * 100) + '%' : '0%';
+  byId(prefix + 'Note').textContent = note || '';
+}
+
+function fillMomScorecard(data) {
+  const withBase = data.filter(r => num(r.lastMonthSales) !== null);
+  const lastTotal = withBase.reduce((s, r) => s + (num(r.lastMonthSales) || 0), 0);
+  const projTotal = withBase.reduce((s, r) => s + (num(r.projectedSales) || 0), 0);
+  const growth = lastTotal ? projTotal / lastTotal - 1 : null;
+  const change = lastTotal ? projTotal - lastTotal : null;
+  const tone = growthTone(growth);
+  const st = byId('momStatus'); st.textContent = tone.label; st.className = 'sales-status ' + tone.key;
+  const set = (id, v, cls = '') => { const e = byId(id); e.textContent = v; e.className = 'sales-metric-value' + (cls ? ' ' + cls : ''); };
+  set('momLast', currency(lastTotal || null));
+  set('momProjected', currency(projTotal || null));
+  set('momChange', currency(change), change === null ? '' : change >= 0 ? 'positive' : 'negative');
+  set('momGrowthValue', signedPercent(growth), growth === null ? '' : growth >= 0 ? 'positive' : 'negative');
+  byId('momLastLabel').textContent = lastMonthName;
+  const p = byId('momProgress');
+  p.className = 'sales-progress ' + tone.key;
+  // Bar shows this month's projection as a share of last month, capped at 100% of the track.
+  const ratio = lastTotal ? Math.min(100, (projTotal / lastTotal) * 100) : 0;
+  byId('momProgressFill').style.width = ratio + '%';
+  const missing = data.length - withBase.length;
+  byId('momNote').textContent = withBase.length
+    ? `${nf.format(withBase.length)} outlets have a ${lastMonthName} baseline${missing ? ` · ${nf.format(missing)} without` : ''}.`
+    : 'No last-month baseline for the selected outlets.';
+}
+
+function renderSales(data) {
+  const t = sum(data, 'targetToDate'), a = sum(data, 'salesToDate');
+  const mt = sum(data, 'monthlyTarget'), p = sum(data, 'projectedSales');
+  const through = byId('salesThroughDate').value, start = byId('salesRangeStart').value, end = byId('salesRangeEnd').value;
+  if (salesPeriodMode === 'range') {
+    byId('salesPeriodText').textContent = `Selected range: ${prettyDate(start)} to ${prettyDate(end)}. Projection still uses month-start actual through ${prettyDate(end)}.`;
+    byId('actualCardSubtitle').textContent = `${prettyDate(start)} → ${prettyDate(end)}`;
+    fillSalesScorecard('actual', t, a, 'Target and actual only for the selected date range.');
+    fillSalesScorecard('projected', mt, p, 'Full-month projection uses actual from month start through the selected range end.');
+  } else {
+    byId('salesPeriodText').textContent = `Sales through ${prettyDate(through)} with month-end projection.`;
+    byId('actualCardSubtitle').textContent = `Month start → ${prettyDate(through)}`;
+    fillSalesScorecard('actual', t, a, 'Till-date target and actual through selected date.');
+    fillSalesScorecard('projected', mt, p, 'Full-month projection using observed day-group run rates.');
+  }
+  fillMomScorecard(data);
+  renderSalesBreakdown(data);
+}
+
+/* ---------- Regional Head / Zonal breakdown ---------- */
+function groupSales(data, key) {
+  const m = new Map();
+  data.forEach(r => {
+    const name = display(r[key]);
+    if (name === '—') return;
+    const x = m.get(name) || { name, outlets: 0, target: 0, actual: 0, monthlyTarget: 0, projected: 0, lastMonth: 0, hasBase: 0 };
+    x.outlets += 1;
+    x.target += num(r.targetToDate) || 0;
+    x.actual += num(r.salesToDate) || 0;
+    x.monthlyTarget += num(r.monthlyTarget) || 0;
+    x.projected += num(r.projectedSales) || 0;
+    if (num(r.lastMonthSales) !== null) { x.lastMonth += num(r.lastMonthSales); x.hasBase += 1; }
+    m.set(name, x);
+  });
+  return [...m.values()].map(x => ({
+    ...x,
+    achievement: x.target ? x.actual / x.target : null,
+    projectedAchievement: x.monthlyTarget ? x.projected / x.monthlyTarget : null,
+    mom: x.lastMonth ? x.projected / x.lastMonth - 1 : null
+  }));
+}
+
+function numberCell(value, signed) {
+  const d = document.createElement('div');
+  d.className = 'sales-breakdown-value' + (signed && num(value) !== null ? (num(value) >= 0 ? ' positive' : ' negative') : '');
+  d.textContent = currency(value);
+  return d;
+}
+function pctCell(value) {
+  const d = document.createElement('div');
+  const n = num(value);
+  d.className = 'sales-breakdown-value' + (n === null ? '' : n >= 0 ? ' positive' : ' negative');
+  d.textContent = signedPercent(value);
+  return d;
+}
+function nameCell(name) {
+  const d = document.createElement('div');
+  d.className = 'sales-breakdown-name'; d.title = name; d.textContent = name;
+  return d;
+}
+function badgeCell(tone, label) {
+  const d = document.createElement('div');
+  d.className = 'badge ' + tone; d.textContent = label;
+  return d;
+}
+
+function renderSalesBreakdown(data) {
+  const key = salesBreakdownMode === 'regional' ? (availableKey('regionalHead') ? 'regionalHead' : 'leader') : 'zonal';
+  const label = salesBreakdownMode === 'regional' ? 'Regional Head' : 'Zonal';
+  byId('salesBreakdownTitle').textContent = label + ' Actual vs Target';
+  byId('breakdownLastMonthHead').textContent = lastMonthName;
+  document.querySelectorAll('[data-sales-breakdown-mode]').forEach(b => b.classList.toggle('active', b.dataset.salesBreakdownMode === salesBreakdownMode));
+
+  const items = groupSales(data, key).sort((a, b) => b.actual - a.actual);
+  breakdownExport = items.map(x => ({ label, ...x }));
+  const host = byId('salesBreakdownRows');
+  host.replaceChildren();
+  if (!items.length) { host.innerHTML = '<p class="empty">No matching sales rows.</p>'; return; }
+  items.forEach(x => {
+    const tone = performanceTone(x.achievement);
+    const row = document.createElement('div');
+    row.className = 'sales-breakdown-row breakdown-grid';
+    row.append(
+      nameCell(`${x.name} · ${nf.format(x.outlets)}`),
+      numberCell(x.target), numberCell(x.actual), numberCell(x.lastMonth || null),
+      numberCell(x.monthlyTarget), numberCell(x.projected), pctCell(x.mom),
+      badgeCell(tone.key, Number.isFinite(x.achievement) ? Math.round(x.achievement * 100) + '%' : '—')
+    );
+    host.append(row);
+  });
+}
+
+/* ---------- KPIs ---------- */
+function renderKpis(data) {
+  byId('kpiOutlets').textContent = nf.format(data.length);
+  const sfts = data.map(r => num(r.sft)).filter(n => n !== null && n > 0);
+  const total = sfts.reduce((a, b) => a + b, 0);
+  byId('kpiSft').textContent = compactNumber(total);
+  byId('kpiAvgSft').textContent = sfts.length ? nf.format(Math.round(total / sfts.length)) : '—';
+  byId('kpiOwn').textContent = nf.format(data.filter(r => /own/i.test(text(r.status))).length);
+  byId('kpiPnp').textContent = nf.format(data.filter(r => text(r.pnpStatus).trim().toUpperCase() === 'PNP').length);
+
+  const launches = data.map(r => salesDateValue(r.launchDate)).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d));
+  const years = launches.map(d => d.slice(0, 4));
+  const latestYear = years.length ? years.reduce((a, b) => (a > b ? a : b)) : null;
+  byId('kpiLatestYear').textContent = latestYear ? nf.format(years.filter(y => y === latestYear).length) : '—';
+  byId('kpiLatestYearNote').textContent = latestYear ? `Opened in ${latestYear}` : 'Latest launch year';
+
+  const months = launches.map(d => d.slice(0, 7));
+  const latestMonth = months.length ? months.reduce((a, b) => (a > b ? a : b)) : null;
+  byId('kpiLatestMonth').textContent = latestMonth ? nf.format(months.filter(m => m === latestMonth).length) : '—';
+  byId('kpiLatestMonthNote').textContent = latestMonth ? `Opened in ${monthLabel(latestMonth)}` : 'Latest launch month';
+}
+
+/* ---------- charts ---------- */
+function aggregate(data, key, derive) {
+  const m = new Map();
+  data.forEach(r => {
+    const v = derive ? derive(r) : display(r[key]);
+    if (!v || v === '—') return;
+    m.set(v, (m.get(v) || 0) + 1);
+  });
+  return [...m.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
+}
+function detailDrillValue(row, drill) { return drill.derive ? drill.derive(row) : display(row[drill.key]); }
+function detailDrillRows(data) {
+  if (!detailDrill) return data;
+  const allowed = (detailDrill.values || []).map(v => text(v).toLowerCase());
+  return data.filter(r => allowed.includes(text(detailDrillValue(r, detailDrill)).toLowerCase()));
+}
+function updateDetailDrillUi() {
+  const status = byId('detailDrillStatus'), clear = byId('clearDetailDrill');
+  if (!detailDrill) { status.hidden = true; status.textContent = ''; clear.hidden = true; return; }
+  status.hidden = false; clear.hidden = false;
+  status.textContent = `Clicked filter: ${detailDrill.label} = ${(detailDrill.values || []).join(', ')}`;
+  clear.title = 'Show all outlets within the current sidebar filters';
+}
+function setDetailDrill(key, label, values, derive) {
+  detailDrill = { key, label, values: Array.isArray(values) ? values : [values], derive };
+  updateDetailDrillUi();
+  renderTable(selectedRows());
+  requestAnimationFrame(() => byId('directoryCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+}
+function makeDrillCount(textValue, title, onClick) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'drill-count'; b.textContent = textValue; b.title = title;
+  b.setAttribute('aria-label', title);
+  b.addEventListener('click', e => { e.stopPropagation(); onClick(); });
+  return b;
+}
+function renderBarList(id, items, secondary, drillKey, derive, drillLabel) {
+  const host = byId(id);
+  host.replaceChildren();
+  if (!items.length) { const e = document.createElement('p'); e.className = 'empty'; e.textContent = 'No matching data.'; host.append(e); return; }
+  const max = Math.max(...items.map(x => x.value), 1);
+  items.forEach(item => {
+    const row = document.createElement('div'); row.className = 'bar-row';
+    const l = document.createElement('div'); l.className = 'bar-label';
+    const p = document.createElement('div'); p.className = 'bar-label-primary'; p.textContent = item.label; l.append(p);
+    if (secondary && item.secondary) { const s = document.createElement('div'); s.className = 'bar-label-secondary'; s.textContent = item.secondary; l.append(s); }
+    const track = document.createElement('div'); track.className = 'bar-track';
+    const fill = document.createElement('div'); fill.className = 'bar-fill';
+    fill.style.width = Math.max(1, item.value / max * 100) + '%';
+    track.append(fill);
+    const val = document.createElement('div'); val.className = 'bar-value';
+    if (drillKey) val.append(makeDrillCount(nf.format(item.value), `Show ${nf.format(item.value)} outlets for ${item.label} in Detail View`, () => setDetailDrill(drillKey, drillLabel || FIELD_DEFINITIONS[drillKey]?.label || drillKey, [item.label], derive)));
+    else val.textContent = nf.format(item.value);
+    row.append(l, track, val);
+    host.append(row);
+  });
+}
+const DONUT_VARS = ['--series-1', '--series-2', '--series-3', '--seq-600', '--seq-300'];
+function renderDonut(id, title, items, drillKey) {
+  const P = palette();
+  const host = byId(id);
+  host.replaceChildren();
+  const head = document.createElement('div'); head.className = 'donut-head';
+  const h3 = document.createElement('h3'); h3.textContent = title;
+  const p = document.createElement('p'); p.textContent = 'Outlet share';
+  head.append(h3, p); host.append(head);
+  if (!items.length) { host.insertAdjacentHTML('beforeend', '<p class="empty">No matching data.</p>'); return; }
+  let parts = items;
+  if (parts.length > 5) {
+    const omitted = parts.slice(4), rest = omitted.reduce((s, x) => s + x.value, 0);
+    parts = parts.slice(0, 4).concat({ label: 'Other', value: rest, values: omitted.map(x => x.label) });
+  }
+  const total = parts.reduce((s, x) => s + x.value, 0);
+  const wrap = document.createElement('div'); wrap.className = 'donut-wrap';
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.classList.add('donut-svg'); svg.setAttribute('viewBox', '0 0 100 100');
+  const base = document.createElementNS(svg.namespaceURI, 'circle');
+  Object.entries({ cx: 50, cy: 50, r: 37, fill: 'none', stroke: P['--track'], 'stroke-width': 17 }).forEach(([k, v]) => base.setAttribute(k, v));
+  svg.append(base);
+  let off = 0;
+  parts.forEach((item, i) => {
+    const share = total ? item.value / total * 100 : 0;
+    const c = document.createElementNS(svg.namespaceURI, 'circle');
+    Object.entries({
+      cx: 50, cy: 50, r: 37, fill: 'none', stroke: P.get(DONUT_VARS[i]), 'stroke-width': 17,
+      'stroke-linecap': 'butt', pathLength: 100, 'stroke-dasharray': `${Math.max(0, share - 0.6)} ${100 - Math.max(0, share - 0.6)}`,
+      'stroke-dashoffset': String(-off), transform: 'rotate(-90 50 50)'
+    }).forEach(([k, v]) => c.setAttribute(k, v));
+    svg.append(c); off += share;
+  });
+  const center = document.createElement('div'); center.className = 'donut-center';
+  const strong = document.createElement('strong'); strong.textContent = nf.format(total);
+  const span = document.createElement('span'); span.textContent = 'Outlets';
+  center.append(strong, span);
+  wrap.append(svg, center); host.append(wrap);
+  const legend = document.createElement('ul'); legend.className = 'donut-legend';
+  parts.forEach((item, i) => {
+    const li = document.createElement('li');
+    const dot = document.createElement('span'); dot.className = 'legend-dot'; dot.style.background = P.get(DONUT_VARS[i]);
+    const label = document.createElement('span'); label.className = 'legend-label'; label.title = item.label; label.textContent = item.label;
+    const value = document.createElement('span'); value.className = 'legend-value';
+    const countText = `${nf.format(item.value)} · ${total ? Math.round(item.value / total * 100) : 0}%`;
+    if (drillKey) value.append(makeDrillCount(countText, `Show ${nf.format(item.value)} ${item.label} outlets in Detail View`, () => setDetailDrill(drillKey, title, item.values || [item.label])));
+    else value.textContent = countText;
+    li.append(dot, label, value); legend.append(li);
+  });
+  host.append(legend);
+}
+
+/* ---------- launch cohort card ---------- */
+function reportYear() {
+  const m = text(source.reportMonth) || text(meta.reportMonth) || text(byId('salesThroughDate').value).slice(0, 7);
+  return /^\d{4}/.test(m) ? m.slice(0, 4) : String(new Date().getFullYear());
+}
+function launchCohorts(data) {
+  const year = reportYear();
+  const buckets = new Map();
+  data.forEach(r => {
+    const d = salesDateValue(r.launchDate);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+    let bucketKey, bucketLabel;
+    if (launchMode === 'month') {
+      if (d.slice(0, 4) !== year) return;
+      bucketKey = d.slice(0, 7); bucketLabel = monthLabel(bucketKey);
+    } else {
+      bucketKey = d.slice(0, 4); bucketLabel = bucketKey;
+    }
+    const x = buckets.get(bucketKey) || { key: bucketKey, label: bucketLabel, outlets: 0, sft: 0, sftCount: 0, lastMonth: 0, projected: 0, actual: 0 };
+    x.outlets += 1;
+    const sft = num(r.sft);
+    if (sft !== null && sft > 0) { x.sft += sft; x.sftCount += 1; }
+    if (num(r.lastMonthSales) !== null) x.lastMonth += num(r.lastMonthSales);
+    x.projected += num(r.projectedSales) || 0;
+    x.actual += num(r.salesToDate) || 0;
+    buckets.set(bucketKey, x);
+  });
+  const totalOutlets = data.length || 1;
+  return [...buckets.values()]
+    .sort((a, b) => (launchMode === 'month' ? a.key.localeCompare(b.key) : b.key.localeCompare(a.key)))
+    .map(x => ({ ...x, avgSft: x.sftCount ? x.sft / x.sftCount : null, mom: x.lastMonth ? x.projected / x.lastMonth - 1 : null, share: x.outlets / totalOutlets }));
+}
+function renderLaunchCard(data) {
+  document.querySelectorAll('[data-launch-mode]').forEach(b => b.classList.toggle('active', b.dataset.launchMode === launchMode));
+  const year = reportYear();
+  byId('launchHeadLabel').textContent = launchMode === 'month' ? `${year} month` : 'Launch year';
+  byId('launchLastMonthHead').textContent = lastMonthName;
+  byId('launchSubtitle').textContent = launchMode === 'month'
+    ? `Openings month by month across ${year}, with how each month's cohort is trading now`
+    : 'Cohort size, floor area and how each opening cohort is trading now';
+
+  const items = launchCohorts(data);
+  launchExport = items.slice();
+  const host = byId('launchRows');
+  host.replaceChildren();
+  if (!items.length) {
+    const e = document.createElement('p');
+    e.className = 'empty';
+    e.textContent = launchMode === 'month' ? `No outlets opened in ${year} within the current filters.` : 'No valid launching dates in the current view.';
+    host.append(e);
+    return;
+  }
+  const derive = launchMode === 'month'
+    ? r => { const d = salesDateValue(r.launchDate); return d ? monthLabel(d.slice(0, 7)) : ''; }
+    : r => { const d = salesDateValue(r.launchDate); return d ? d.slice(0, 4) : ''; };
+  items.forEach(x => {
+    const row = document.createElement('div');
+    row.className = 'sales-breakdown-row breakdown-grid';
+    const label = nameCell(x.label);
+
+    const count = document.createElement('div');
+    count.className = 'sales-breakdown-value';
+    count.append(makeDrillCount(nf.format(x.outlets), `Show ${nf.format(x.outlets)} outlets opened in ${x.label}`,
+      () => setDetailDrill('launchDate', launchMode === 'month' ? 'Launch month' : 'Launch year', [x.label], derive)));
+
+    const totalSft = document.createElement('div');
+    totalSft.className = 'sales-breakdown-value'; totalSft.textContent = x.sft ? compactNumber(x.sft) : '—';
+    const avgSft = document.createElement('div');
+    avgSft.className = 'sales-breakdown-value'; avgSft.textContent = x.avgSft ? nf.format(Math.round(x.avgSft)) : '—';
+
+    // Share of the network is descriptive, not a performance verdict — keep the badge neutral.
+    const share = document.createElement('div');
+    share.className = 'badge neutral';
+    share.textContent = Math.round(x.share * 100) + '%';
+    share.title = `${nf.format(x.outlets)} of the outlets in view`;
+
+    row.append(label, count, totalSft, avgSft, numberCell(x.lastMonth || null), numberCell(x.projected), pctCell(x.mom), share);
+    host.append(row);
+  });
+}
+
+function renderCharts(data) {
+  renderBarList('divisionChart', aggregate(data, 'division'), null, 'division', null, 'Division');
+  const oversightKey = oversightMode === 'regional' ? (availableKey('regionalHead') ? 'regionalHead' : 'leader') : 'zonal';
+  const oversightLabel = oversightMode === 'regional' ? 'RHO' : 'Zonal';
+  document.querySelectorAll('[data-oversight-mode]').forEach(b => b.classList.toggle('active', b.dataset.oversightMode === oversightMode));
+  const oversightItems = aggregate(data, oversightKey);
+  const salesByName = new Map(groupSales(data, oversightKey).map(x => [x.name, x]));
+  oversightExport = oversightItems.map(item => ({ label: oversightLabel, name: item.label, outlets: item.value, sales: salesByName.get(item.label) || {} }));
+  renderBarList('oversightChart', oversightItems, null, oversightKey, null, oversightLabel);
+  renderDonut('formatChart', 'Format mix', aggregate(data, 'format'), 'format');
+  renderDonut('statusMixChart', 'Store-status mix', aggregate(data, 'status'), 'status');
+  renderDonut('pnpMixChart', 'PNP-status mix', aggregate(data, 'pnpStatus'), 'pnpStatus');
+  renderBarList('locationChart', aggregate(data, 'locationType'), null, 'locationType', null, 'Location Type');
+  renderLaunchCard(data);
+}
+
+/* ---------- detail table ---------- */
+function renderTable(data) {
+  const columns = TABLE_ORDER.filter(k => baseRows.some(r => r[k] !== undefined && r[k] !== null && text(r[k]) !== '') || ALWAYS_TABLE.includes(k));
+  const q = tableQuery.toLowerCase();
+  let trs = detailDrillRows(data).filter(r => !q || columns.some(k => text(r[k]).toLowerCase().includes(q)));
+  Object.entries(tableHeaderFilters).forEach(([k, v]) => { if (v) trs = trs.filter(r => text(r[k]).toLowerCase().includes(v.toLowerCase())); });
+  if (tableSort.key) {
+    const k = tableSort.key, numeric = MONEY_COLS.includes(k) || PCT_COLS.includes(k);
+    trs.sort((a, b) => numeric
+      ? ((num(a[k]) || 0) - (num(b[k]) || 0)) * tableSort.direction
+      : text(a[k]).localeCompare(text(b[k]), undefined, { numeric: true }) * tableSort.direction);
+  }
+  currentTableExport = { columns, rows: trs.slice() };
+
+  const th = byId('tableHead'); th.replaceChildren();
+  const hr = document.createElement('tr');
+  columns.forEach(k => {
+    const cell = document.createElement('th');
+    cell.textContent = k === 'lastMonthSales' ? lastMonthName + ' sales' : (FIELD_DEFINITIONS[k]?.label || k);
+    const act = document.createElement('span');
+    act.className = 'header-actions';
+    act.textContent = tableSort.key === k ? (tableSort.direction === 1 ? '▲' : '▼') : '↕';
+    cell.append(act);
+    const menu = document.createElement('div'); menu.className = 'header-filter-menu'; menu.hidden = true;
+    const inp = document.createElement('input');
+    inp.placeholder = 'Filter ' + (FIELD_DEFINITIONS[k]?.label || k);
+    inp.value = tableHeaderFilters[k] || '';
+    inp.oninput = e => { tableHeaderFilters[k] = e.target.value; renderTable(data); };
+    menu.append(inp); cell.append(menu);
+    cell.onclick = e => {
+      if (e.target.tagName === 'INPUT') return;
+      if (tableSort.key === k) tableSort.direction *= -1; else { tableSort.key = k; tableSort.direction = 1; }
+      renderTable(data);
+    };
+    cell.ondblclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; if (!menu.hidden) inp.focus(); };
+    hr.append(cell);
+  });
+  th.append(hr);
+
+  const body = byId('tableBody'); body.replaceChildren();
+  if (!trs.length) {
+    const tr = document.createElement('tr'), td = document.createElement('td');
+    td.colSpan = Math.max(columns.length, 1);
+    td.textContent = 'No outlet records match the filters or search.';
+    tr.append(td); body.append(tr);
+  } else trs.forEach(r => {
+    const tr = document.createElement('tr');
+    columns.forEach(k => {
+      const td = document.createElement('td');
+      const v = r[k];
+      if (MONEY_COLS.includes(k)) {
+        td.className = 'number';
+        td.textContent = k === 'sft' ? (num(v) !== null ? nf.format(Math.round(num(v))) : '—') : currency(v);
+      } else if (PCT_COLS.includes(k)) {
+        td.className = 'number';
+        td.textContent = k === 'momGrowth' ? signedPercent(v) : (num(v) !== null ? Math.round(num(v) * 100) + '%' : '—');
+      } else if (k === 'launchDate') td.textContent = prettyDate(salesDateValue(v) || v);
+      else td.textContent = display(v);
+      if (SIGNED_COLS.includes(k) && num(v) !== null) td.classList.add(num(v) >= 0 ? 'positive' : 'negative');
+      tr.append(td);
+    });
+    body.append(tr);
+  });
+  byId('tableCount').textContent = nf.format(trs.length) + ' outlet' + (trs.length === 1 ? '' : 's') + ' shown';
+}
+
+/* ---------- CSV exports ---------- */
+function downloadDirectoryCsv() {
+  const ex = currentTableExport;
+  if (!ex.columns?.length) return;
+  const header = ex.columns.map(k => (k === 'lastMonthSales' ? lastMonthName + ' sales' : (FIELD_DEFINITIONS[k]?.label || k)));
+  const body = ex.rows.map(r => ex.columns.map(k => {
+    let v = r[k];
+    if (PCT_COLS.includes(k) && num(v) !== null) v = (num(v) * 100).toFixed(1) + '%';
+    else if (MONEY_COLS.includes(k) && num(v) !== null) v = Math.round(num(v));
+    return v;
+  }));
+  downloadCsv(`outlet-directory-${stamp()}.csv`, header, body);
+}
+function downloadBreakdownCsv() {
+  if (!breakdownExport.length) return;
+  const label = salesBreakdownMode === 'regional' ? 'Regional Head' : 'Zonal';
+  downloadCsv(`${label.toLowerCase().replace(/\s+/g, '-')}-actual-vs-target-${stamp()}.csv`,
+    [label, 'Outlets', 'Target till date', 'Actual till date', `${lastMonthName} sales`, 'Monthly target', 'Projected month-end', 'MoM growth', 'Till-date achievement', 'Projected achievement'],
+    breakdownExport.map(x => [x.name, x.outlets, Math.round(x.target), Math.round(x.actual), Math.round(x.lastMonth),
+      Math.round(x.monthlyTarget), Math.round(x.projected),
+      x.mom === null ? '' : (x.mom * 100).toFixed(1) + '%',
+      x.achievement === null ? '' : (x.achievement * 100).toFixed(1) + '%',
+      x.projectedAchievement === null ? '' : (x.projectedAchievement * 100).toFixed(1) + '%']));
+}
+function downloadOversightCsv() {
+  if (!oversightExport.length) return;
+  const label = oversightMode === 'regional' ? 'Regional Head' : 'Zonal';
+  downloadCsv(`outlets-overseeing-${label.toLowerCase().replace(/\s+/g, '-')}-${stamp()}.csv`,
+    [label, 'Outlets overseeing', 'Target till date', 'Actual till date', `${lastMonthName} sales`, 'Monthly target', 'Projected month-end', 'MoM growth', 'Till-date achievement'],
+    oversightExport.map(x => [x.name, x.outlets, Math.round(x.sales.target || 0), Math.round(x.sales.actual || 0),
+      Math.round(x.sales.lastMonth || 0), Math.round(x.sales.monthlyTarget || 0), Math.round(x.sales.projected || 0),
+      x.sales.mom == null ? '' : (x.sales.mom * 100).toFixed(1) + '%',
+      x.sales.achievement == null ? '' : (x.sales.achievement * 100).toFixed(1) + '%']));
+}
+function downloadLaunchCsv() {
+  if (!launchExport.length) return;
+  downloadCsv(`outlet-openings-${launchMode === 'month' ? reportYear() + '-month-wise' : 'by-launch-year'}-${stamp()}.csv`,
+    [launchMode === 'month' ? 'Launch month' : 'Launch year', 'Outlets opened', 'Total SFT', 'Average SFT',
+      `${lastMonthName} sales`, 'Projected month-end', 'MoM growth', 'Share of network'],
+    launchExport.map(x => [x.label, x.outlets, Math.round(x.sft), x.avgSft === null ? '' : Math.round(x.avgSft),
+      Math.round(x.lastMonth), Math.round(x.projected),
+      x.mom === null ? '' : (x.mom * 100).toFixed(1) + '%', (x.share * 100).toFixed(1) + '%']));
+}
+
+/* ---------- render loop ---------- */
+function render() {
+  filterPanel.refresh();
+  const data = selectedRows();
+  const active = FILTERS.filter(f => filters[f.key]?.length).map(f => f.label + ': ' + filters[f.key].join(', '));
+  byId('filterSummary').textContent = active.join(' · ');
+  renderSales(data);
+  renderKpis(data);
+  renderCharts(data);
+  updateDetailDrillUi();
+  renderTable(data);
+}
+
+/* ---------- period controls ---------- */
+function applyPeriod(showMessage = false) {
+  const through = byId('salesThroughDate'), start = byId('salesRangeStart'), end = byId('salesRangeEnd');
+  const dateValue = salesPeriodMode === 'range' ? end.value : through.value;
+  if (!dateValue) return;
+  const rangeStart = salesPeriodMode === 'range' ? start.value : '';
+  rows = refreshSalesCalculations(baseRows, dateValue, rangeStart);
+  render();
+  if (showMessage) setMessage('success', salesPeriodMode === 'range'
+    ? `Recalculated for ${prettyDate(rangeStart)} through ${prettyDate(dateValue)}. Month-end projection still runs from month start.`
+    : `Till-date target, actual and projection recalculated through ${prettyDate(dateValue)}.`);
+}
+function syncDateControls() {
+  const dates = allSalesDates(baseRows), actual = actualSalesDates(baseRows);
+  const ids = ['salesThroughDate', 'salesRangeStart', 'salesRangeEnd'];
+  if (!dates.length) { ids.forEach(id => { byId(id).disabled = true; byId(id).value = ''; }); return; }
+  const min = dates[0], max = actual.length ? actual[actual.length - 1] : dates[dates.length - 1];
+  ids.forEach(id => { byId(id).disabled = false; byId(id).min = min; byId(id).max = max; });
+  byId('salesThroughDate').value = max;
+  const monthStart = max.slice(0, 7) + '-01';
+  byId('salesRangeStart').value = monthStart < min ? min : monthStart;
+  byId('salesRangeEnd').value = max;
+}
+function syncPeriodUi() {
+  document.querySelectorAll('[data-sales-period-mode]').forEach(b => b.classList.toggle('active', b.dataset.salesPeriodMode === salesPeriodMode));
+  byId('throughDateWrap').hidden = salesPeriodMode !== 'through';
+  byId('rangeDateWrap').hidden = salesPeriodMode !== 'range';
+}
+
+/* ---------- uploads ---------- */
+function normaliseHeaders(row) { return row.map((h, i) => ({ index: i, raw: text(h), key: headerKey(h) })).filter(x => x.raw); }
+function resolveField(header) {
+  for (const [key, def] of Object.entries(FIELD_DEFINITIONS)) {
+    const aliases = new Set([key, ...def.aliases].map(headerKey));
+    if (aliases.has(header.key)) return key;
+  }
+  return null;
+}
+function workbookCheck(file) {
+  if (!file || !/\.(xlsx|xls|xlsm|xlsb|csv)$/i.test(file.name)) throw new Error('Please choose an Excel or CSV file.');
+  if (!window.XLSX) throw new Error('Excel reader did not load. Check internet access and reload the page.');
+}
+function parseGenericWorkbook(buffer) {
+  const wb = XLSX.read(buffer, { type: 'array', cellDates: true }), candidates = [];
+  wb.SheetNames.forEach(sheetName => {
+    const matrix = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: '', raw: true, blankrows: false });
+    for (let hr = 0; hr < Math.min(matrix.length, 30); hr++) {
+      const heads = normaliseHeaders(matrix[hr] || []);
+      if (!heads.length) continue;
+      const rws = matrix.slice(hr + 1).filter(r => r.some(v => text(v) !== ''));
+      if (!rws.length) continue;
+      const mappings = heads.map(h => ({ ...h, field: resolveField(h) }));
+      const recognized = mappings.filter(x => x.field).length, identity = mappings.some(x => x.field === 'code') ? 2 : 0;
+      candidates.push({ sheetName, hr, mappings, rows: rws, score: recognized * 1000 + identity * 100 + Math.min(rws.length, 500) });
+    }
+  });
+  candidates.sort((a, b) => b.score - a.score);
+  const c = candidates[0];
+  if (!c) throw new Error('No worksheet with a usable header and data rows was found.');
+  const out = [], byCode = new Map();
+  c.rows.forEach(arr => {
+    const obj = {};
+    c.mappings.forEach(m => { const raw = arr[m.index]; if (m.field) obj[m.field] = raw; else if (m.raw) obj[m.raw] = raw; });
+    if (obj.code) obj.code = text(obj.code).toUpperCase();
+    ['sft', 'salesToDate', 'targetToDate', 'monthlyTarget', 'lastMonthSales'].forEach(k => { if (obj[k] !== undefined) obj[k] = num(obj[k]); });
+    if (obj.launchDate) obj.launchDate = salesDateValue(obj.launchDate) || text(obj.launchDate);
+    if (obj.code) byCode.set(obj.code, obj); else out.push(obj);
+  });
+  byCode.forEach(v => out.push(v));
+  return { rows: out, sheetName: c.sheetName };
+}
+function parseSalesWorkbook(buffer) {
+  const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+  const codeAliases = new Set(FIELD_DEFINITIONS.code.aliases.map(headerKey));
+  const dateAliases = new Set(['date', 'sales date', 'transaction date', 'business date', 'pos date']);
+  const salesAliases = new Set(['pos nsi', 'daily sales', 'actual sales', 'net sales', 'sales']);
+  let best = null;
+  wb.SheetNames.forEach(sheetName => {
+    const matrix = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: '', raw: true, blankrows: false });
+    for (let hr = 0; hr < Math.min(matrix.length, 30); hr++) {
+      const cols = normaliseHeaders(matrix[hr] || []);
+      const cc = cols.find(c => codeAliases.has(c.key)), dc = cols.find(c => dateAliases.has(c.key)), sc = cols.find(c => salesAliases.has(c.key));
+      if (!cc || !dc || !sc) continue;
+      const rr = matrix.slice(hr + 1).filter(r => r.some(v => text(v) !== ''));
+      const candidate = { sheetName, cc, dc, sc, rr, score: rr.length + (sc.key === 'pos nsi' ? 10 : 0) };
+      if (!best || candidate.score > best.score) best = candidate;
+    }
+  });
+  if (!best) throw new Error('Sales file needs Outlet Code, Date, and POS NSI columns.');
+  const dailyValues = new Map(), dates = [];
+  best.rr.forEach(r => {
+    const code = text(r[best.cc.index]).toUpperCase(), date = salesDateValue(r[best.dc.index]), sales = num(r[best.sc.index]);
+    if (!code || !date || sales === null) return;
+    const d = dailyValues.get(code) || {};
+    d[date] = (num(d[date]) || 0) + sales;
+    dailyValues.set(code, d); dates.push(date);
+  });
+  if (!dailyValues.size) throw new Error('No valid outlet-date-wise sales rows were found.');
+  dates.sort();
+  return { dailyValues, startDate: dates[0], endDate: dates.at(-1), sheetName: best.sheetName };
+}
+async function handleSalesUpload(event) {
+  const file = event.target.files?.[0];
+  event.target.value = '';
+  if (!file) return;
+  try {
+    workbookCheck(file);
+    const parsed = parseSalesWorkbook(await file.arrayBuffer());
+    baseRows = baseRows.map(r => {
+      const incoming = parsed.dailyValues.get(text(r.code).toUpperCase());
+      return incoming ? { ...r, dailySalesActuals: { ...(r.dailySalesActuals || {}), ...incoming } } : r;
+    });
+    syncDateControls();
+    byId('salesThroughDate').value = parsed.endDate;
+    byId('salesRangeEnd').value = parsed.endDate;
+    rows = refreshSalesCalculations(baseRows, parsed.endDate, salesPeriodMode === 'range' ? byId('salesRangeStart').value : '');
+    render();
+    setMessage('success', `Local preview updated from ${file.name}: daily sales loaded ${prettyDate(parsed.startDate)} → ${prettyDate(parsed.endDate)}.`);
+  } catch (err) { setMessage('error', err.message || 'Sales file could not be read.'); }
+}
+async function handleMasterUpload(event) {
+  const file = event.target.files?.[0];
+  event.target.value = '';
+  if (!file) return;
+  try {
+    workbookCheck(file);
+    const parsed = parseGenericWorkbook(await file.arrayBuffer());
+    baseRows = parsed.rows;
+    filters = emptyFilters(); saveFilters(filters);
+    detailDrill = null;
+    syncDateControls();
+    rows = refreshSalesCalculations(baseRows, byId('salesThroughDate').value, '');
+    byId('snapshotText').textContent = `${file.name} · ${nf.format(baseRows.length)} records · ${parsed.sheetName}`;
+    render();
+    setMessage('success', `Updated from ${file.name}: ${nf.format(baseRows.length)} records loaded.`);
+  } catch (err) { setMessage('error', err.message || 'Outlet master could not be read.'); }
+}
+
+/* ---------- init ---------- */
+async function init() {
+  try {
+    clearMessage();
+    const payload = await loadDashboardData();
+    baseRows = payload.rows; source = payload.source; meta = payload.meta;
+    lastMonthName = text(source.lastMonth?.monthLabel) || text(source.previousMonthLabel) || 'Last month';
+    const reportMonth = text(source.reportMonth) || text(meta.reportMonth);
+    byId('monthChip').textContent = reportMonth ? monthLabel(reportMonth) : 'Snapshot';
+    tableQuery = ''; tableSort = { key: null, direction: 1 }; tableHeaderFilters = {}; detailDrill = null;
+    byId('outletSearch').value = '';
+    salesPeriodMode = 'through';
+    syncDateControls();
+    const max = byId('salesThroughDate').value;
+    byId('snapshotText').textContent = `${nf.format(baseRows.length)} outlets${max ? ' · sales through ' + prettyDate(max) : ''}${source.lastMonth?.matchedOutlets ? ' · ' + lastMonthName + ' baseline on ' + nf.format(source.lastMonth.matchedOutlets) : ''}`;
+    rows = refreshSalesCalculations(baseRows, max, '');
+    syncPeriodUi();
+    render();
+  } catch (err) {
+    setMessage('error', err.message || 'Dashboard data could not be loaded.');
+    console.error(err);
+  }
+}
+
+initTheme();
+enableScrollChain();
+filterPanel = createFilterPanel('filterFields', {
+  availableKey,
+  onChange: render,
+  getFilters: () => filters,
+  getRows: () => rows,
+  fieldValue
+});
+document.addEventListener('pointerdown', e => { if (!e.target.closest('th')) document.querySelectorAll('.header-filter-menu').forEach(m => (m.hidden = true)); });
+['salesThroughDate', 'salesRangeStart', 'salesRangeEnd'].forEach(id => byId(id).addEventListener('change', () => {
+  const wantsRange = id !== 'salesThroughDate';
+  if ((salesPeriodMode === 'range') === wantsRange) applyPeriod(true);
+}));
+document.querySelectorAll('[data-sales-period-mode]').forEach(b => b.addEventListener('click', () => {
+  salesPeriodMode = b.dataset.salesPeriodMode === 'range' ? 'range' : 'through';
+  syncPeriodUi(); applyPeriod(false);
+}));
+document.querySelectorAll('[data-sales-breakdown-mode]').forEach(b => b.addEventListener('click', () => {
+  salesBreakdownMode = b.dataset.salesBreakdownMode === 'regional' ? 'regional' : 'zonal';
+  renderSalesBreakdown(selectedRows());
+}));
+document.querySelectorAll('[data-oversight-mode]').forEach(b => b.addEventListener('click', () => {
+  oversightMode = b.dataset.oversightMode === 'regional' ? 'regional' : 'zonal';
+  renderCharts(selectedRows());
+}));
+document.querySelectorAll('[data-launch-mode]').forEach(b => b.addEventListener('click', () => {
+  launchMode = b.dataset.launchMode === 'month' ? 'month' : 'year';
+  renderLaunchCard(selectedRows());
+}));
+byId('clearFilters').addEventListener('click', () => {
+  filters = emptyFilters(); saveFilters(filters);
+  detailDrill = null; tableQuery = ''; tableHeaderFilters = {};
+  byId('outletSearch').value = '';
+  filterPanel.closeAll();
+  render();
+});
+byId('clearDetailDrill').addEventListener('click', () => { detailDrill = null; updateDetailDrillUi(); renderTable(selectedRows()); });
+byId('sidebarToggle').addEventListener('click', () => {
+  const shell = document.querySelector('.shell'), hidden = shell.classList.toggle('sidebar-hidden'), btn = byId('sidebarToggle');
+  btn.textContent = hidden ? 'Show sidebar' : 'Hide sidebar';
+  btn.setAttribute('aria-expanded', String(!hidden));
+});
+byId('resetData').addEventListener('click', () => { filters = emptyFilters(); saveFilters(filters); init(); });
+byId('outletSearch').addEventListener('input', e => { tableQuery = e.target.value; renderTable(selectedRows()); });
+byId('downloadDirectoryCsv').addEventListener('click', downloadDirectoryCsv);
+byId('downloadBreakdownCsv').addEventListener('click', downloadBreakdownCsv);
+byId('downloadOversightCsv').addEventListener('click', downloadOversightCsv);
+byId('downloadLaunchCsv').addEventListener('click', downloadLaunchCsv);
+byId('salesFileInput').addEventListener('change', handleSalesUpload);
+byId('fileInput').addEventListener('change', handleMasterUpload);
+// Donut strokes are resolved to concrete colours, so they need repainting on a theme switch.
+document.addEventListener('ond:themechange', () => { if (rows.length) renderCharts(selectedRows()); });
+init();
+})();
+</script>
+</body>
+</html>

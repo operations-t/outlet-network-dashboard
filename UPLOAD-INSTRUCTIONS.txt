@@ -1,0 +1,84 @@
+SHWAPNO OUTLET NETWORK DASHBOARD — UPLOAD INSTRUCTIONS
+======================================================
+
+WHAT TO UPLOAD
+--------------
+Upload the complete contents of this ZIP to the repository root, keeping the
+folder structure exactly as it is:
+
+    index.html                      <- Network overview page
+    insights.html                   <- Growth & Momentum page (new)
+    assets/theme.css                <- shared styling, light + dark
+    assets/core.js                  <- shared calculations
+    assets/vendor/html2canvas.min.js  <- PNG export (bundled, no internet needed)
+    data/zone-distribution.xlsx
+    data/day-wise-sales.xlsx
+    data/day-wise-target.xlsx
+    data/last-month.xlsx            <- last month's sales (new)
+    data/dashboard-data.json        <- rebuilt automatically
+    scripts/build_dashboard_data.py
+    .github/workflows/rebuild-and-deploy.yml
+
+Then: Settings -> Pages -> Build and deployment -> Source -> GitHub Actions.
+Push to main. The workflow rebuilds the JSON and deploys the site.
+
+
+MONTHLY / DAILY DATA REFRESH
+----------------------------
+Replace only these four files in /data, keeping the exact filenames:
+
+  zone-distribution.xlsx   outlet master
+  day-wise-sales.xlsx      Outlet Code, Date, POS NSI
+  day-wise-target.xlsx     Outlet Code, Outlet Name, daily date columns
+  last-month.xlsx          last month's SPLY workbook
+
+Commit them to main. Nothing else needs to change — no code edits, no .bat file,
+no local Python install.
+
+
+THE LAST-MONTH FILE
+-------------------
+Save the monthly SPLY workbook as:   data/last-month.xlsx
+
+The build reads sheet "SPLY-ALL (v5)" and uses two columns:
+
+    Code          ->  outlet code
+    SALES THIS    ->  that outlet's last-month sales
+
+The rest of the workbook is ignored, so upload it unmodified.
+
+This file is OPTIONAL. If it is absent the dashboard still builds and every
+last-month figure shows as a dash instead of a wrong number.
+
+Accepted filenames : last-month.xlsx, Last Month.xlsx, Last month.xlsx, last_month.xlsx
+Accepted sheets    : SPLY-ALL (v5), SPLY-ALL (v5) (2), SPLY-ALL (v4)
+
+Check the Actions log after each push. It prints, for example:
+
+    Wrote data/dashboard-data.json with 989 outlets; sales through 2026-08-16;
+    last month (Jul 2026) matched on 978 outlets from last-month.xlsx.
+
+If "matched on" is much lower than the outlet count, outlet codes have drifted
+between the master and the SPLY sheet.
+
+
+WHAT CHANGED IN THIS VERSION
+----------------------------
+* Light and dark themes, LIGHT IS THE DEFAULT. Toggle is in the top bar and the
+  choice is remembered per browser.
+* The ITEM DASHBOARD button is replaced by a HOME button pointing to
+  https://operations-t.github.io/Dashboard-Portal/
+* Clear filters moved to the top bar as a blue button on both pages.
+* Last month's sales appears everywhere sales and projections appear: scorecards,
+  Regional Head / Zonal card, launch-year card, detail table and all CSV exports.
+* Regional Head & Zonal Actual vs Target now carries monthly target, projected
+  month-end, last month and MoM growth, plus a CSV download button.
+* Number of outlets overseeing has a CSV download button.
+* Outlet openings by launch year behaves like the Regional Head card and adds a
+  "This year, month-wise" toggle plus a CSV button.
+* KPI row shows Opened latest year AND Opened latest month.
+* NEW SECOND PAGE: Growth & Momentum (insights.html) — momentum quadrant, top
+  movers, trading-day heatmap, month trajectory, leadership league table and
+  auto-generated read-out cards. Reachable from the top bar of both pages.
+
+Filters set on one page carry over to the other for the browsing session.
