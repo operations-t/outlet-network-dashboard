@@ -78,7 +78,7 @@ the folder, every last-month figure shows as `—` rather than a wrong number.
 
 ## Themes
 
-Light and dark are both shipped and **light is the default**. The toggle sits in the top bar
+Light and dark are both shipped and **dark is the default**. The toggle sits in the top bar
 on both pages and the choice is remembered in the browser. Dark mode is a hand-picked set of
 tokens rather than an automatic inversion, so contrast holds in both.
 
@@ -163,3 +163,15 @@ report is never mistaken for the whole network.
 
 Node-24-compatible GitHub Pages actions: `checkout@v7`, `setup-python@v7`, `configure-pages@v6`,
 `upload-pages-artifact@v5`, `deploy-pages@v5`.
+
+## Shwapno Dashboard System rebuild (16 September 2026)
+
+Both pages use the additive `assets/redesign.css` layer and the responsive shell in
+`assets/redesign.js`. The existing snapshot, refresh schedule, sales calculations,
+projection model, drill-down and export handlers are retained.
+
+- Persistent navigation rail and mobile filter drawer with keyboard focus management.
+- Dark default with remembered light option; teal, amber and clay status colours.
+- Linked filter counts, selection chips, selected values retained at zero matching outlets.
+- Readable chart labels, responsive charts, square table rows and sticky first columns.
+- Data options remain available from the overview toolbar.

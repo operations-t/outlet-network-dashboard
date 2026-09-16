@@ -6,7 +6,7 @@
 (() => {
 'use strict';
 
-/* ---------- theme (light is the default) ---------- */
+/* ---------- theme (dark is the default) ---------- */
 const THEME_KEY = 'ond-theme';
 function storedTheme() {
   try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
@@ -16,7 +16,7 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', next);
   try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* private mode */ }
   document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
-    btn.textContent = next === 'dark' ? '☀ Light' : '🌙 Dark';
+    btn.textContent = next === 'dark' ? 'Light theme' : 'Dark theme';
     btn.title = next === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
     btn.setAttribute('aria-pressed', String(next === 'dark'));
   });
@@ -24,7 +24,7 @@ function applyTheme(theme) {
 }
 function currentTheme() { return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
 function initTheme() {
-  applyTheme(storedTheme() === 'dark' ? 'dark' : 'light');
+  applyTheme(storedTheme() === 'light' ? 'light' : 'dark');
   document.addEventListener('click', e => {
     const btn = e.target.closest('[data-theme-toggle]');
     if (!btn) return;
@@ -32,7 +32,7 @@ function initTheme() {
   });
 }
 // Stamp the attribute immediately so there is no flash before DOM ready.
-document.documentElement.setAttribute('data-theme', storedTheme() === 'dark' ? 'dark' : 'light');
+document.documentElement.setAttribute('data-theme', storedTheme() === 'light' ? 'light' : 'dark');
 
 /* ---------- primitives ---------- */
 const byId = id => document.getElementById(id);
@@ -135,13 +135,13 @@ const FIELD_DEFINITIONS = {
 
 const FILTERS = [
   { key: 'outletIdentity', label: 'Outlet code + name', get: r => [text(r.code), text(r.outletName)].filter(Boolean).join(' — ') },
-  { key: 'division', label: 'Division' },
-  { key: 'status', label: 'Store status' },
-  { key: 'pnpStatus', label: 'PNP status' },
   { key: 'leader', label: 'Leader / Regional Head', get: r => r.leader || r.regionalHead },
   { key: 'zonal', label: 'Zonal' },
-  { key: 'format', label: 'Format' },
+  { key: 'division', label: 'Division' },
   { key: 'district', label: 'District' },
+  { key: 'format', label: 'Format' },
+  { key: 'pnpStatus', label: 'PNP status' },
+  { key: 'status', label: 'Store status' },
   { key: 'area', label: 'Area' },
   { key: 'cityType', label: 'Location Type Dv/Ds/T' },
   { key: 'floorType', label: 'Floor Type' },
@@ -294,99 +294,70 @@ function stamp() {
 function createFilterPanel(hostId, { availableKey, onChange, getFilters, getRows, fieldValue }) {
   const host = byId(hostId);
   if (!host) return { refresh() {}, closeAll() {} };
-  const comboQueries = new Map(), optionsByKey = new Map();
+  const comboQueries = new Map(), optionsByKey = new Map(), countsByKey = new Map();
   host.replaceChildren();
-
   FILTERS.forEach(f => {
-    const wrap = document.createElement('div');
-    wrap.className = 'field'; wrap.dataset.field = f.key;
-    const lab = document.createElement('label');
-    lab.htmlFor = f.key; lab.textContent = f.label;
-    const combo = document.createElement('div'); combo.className = 'combobox';
-    const input = document.createElement('input');
-    input.id = f.key; input.type = 'search'; input.autocomplete = 'off';
-    input.setAttribute('role', 'combobox'); input.setAttribute('aria-expanded', 'false');
-    input.placeholder = 'All ' + f.label;
-    const toggle = document.createElement('button');
-    toggle.type = 'button'; toggle.className = 'combo-toggle'; toggle.textContent = '⌄';
-    toggle.setAttribute('aria-label', 'Toggle ' + f.label + ' options');
-    const menu = document.createElement('div');
-    menu.className = 'combo-menu'; menu.id = f.key + 'Options'; menu.hidden = true;
-    combo.append(input, toggle, menu); wrap.append(lab, combo); host.append(wrap);
-    input.addEventListener('focus', () => openCombo(f.key));
-    input.addEventListener('input', e => { comboQueries.set(f.key, text(e.target.value)); renderComboMenu(f.key); menu.hidden = false; });
-    input.addEventListener('keydown', e => { if (e.key === 'Escape') closeCombo(f.key); });
-    toggle.addEventListener('click', () => (menu.hidden ? openCombo(f.key) : closeCombo(f.key)));
+    const wrap = document.createElement('div');wrap.className='field';wrap.dataset.field=f.key;
+    const lab=document.createElement('label');lab.htmlFor=f.key;lab.textContent=f.label;
+    const count=document.createElement('span');count.className='filter-count';count.id=f.key+'Count';lab.append(count);
+    const combo=document.createElement('div');combo.className='combobox';
+    const input=document.createElement('input');input.id=f.key;input.type='search';input.autocomplete='off';
+    input.setAttribute('role','combobox');input.setAttribute('aria-expanded','false');input.setAttribute('aria-controls',f.key+'List');
+    input.placeholder='All '+f.label;
+    const toggle=document.createElement('button');toggle.type='button';toggle.className='combo-toggle';toggle.textContent='⌄';
+    toggle.setAttribute('aria-label','Toggle '+f.label+' options');
+    const menu=document.createElement('div');menu.className='combo-menu';menu.id=f.key+'Options';menu.hidden=true;
+    combo.append(input,toggle,menu);wrap.append(lab,combo);host.append(wrap);
+    input.addEventListener('focus',()=>openCombo(f.key));
+    input.addEventListener('input',e=>{comboQueries.set(f.key,text(e.target.value));renderComboMenu(f.key);menu.hidden=false;input.setAttribute('aria-expanded','true');});
+    input.addEventListener('keydown',e=>{if(e.key==='Escape')closeCombo(f.key);if(e.key==='ArrowDown'){e.preventDefault();menu.querySelector('[role="option"]')?.focus();}});
+    toggle.addEventListener('click',()=>menu.hidden?openCombo(f.key):closeCombo(f.key));
   });
-
-  function closeCombo(key) {
-    const m = byId(key + 'Options');
-    if (!m) return;
-    m.hidden = true; comboQueries.set(key, ''); updateComboInput(key);
-    byId(key).setAttribute('aria-expanded', 'false');
-  }
-  function closeAll() { FILTERS.forEach(f => closeCombo(f.key)); }
-  function openCombo(key) {
-    if (!availableKey(key)) return;
-    FILTERS.forEach(f => { if (f.key !== key) closeCombo(f.key); });
-    comboQueries.set(key, ''); byId(key).value = '';
-    renderComboMenu(key); byId(key + 'Options').hidden = false;
-    byId(key).setAttribute('aria-expanded', 'true');
-  }
-  function updateComboInput(key) {
-    const selected = getFilters()[key] || [], input = byId(key), menu = byId(key + 'Options');
-    if (document.activeElement === input && menu && !menu.hidden) return;
-    input.value = selected.length ? selected.join(', ') : '';
-    input.placeholder = 'All ' + (FILTERS.find(f => f.key === key)?.label || key);
-  }
-  function renderComboMenu(key) {
-    const menu = byId(key + 'Options');
-    if (!menu) return;
+  function commit(){saveFilters(getFilters());onChange();}
+  function closeCombo(key){const m=byId(key+'Options');if(!m)return;m.hidden=true;comboQueries.set(key,'');updateComboInput(key);byId(key).setAttribute('aria-expanded','false');}
+  function closeAll(){FILTERS.forEach(f=>closeCombo(f.key));}
+  function openCombo(key){if(!availableKey(key))return;FILTERS.forEach(f=>{if(f.key!==key)closeCombo(f.key);});comboQueries.set(key,'');byId(key).value='';renderComboMenu(key);byId(key+'Options').hidden=false;byId(key).setAttribute('aria-expanded','true');}
+  function updateComboInput(key){const selected=getFilters()[key]||[],input=byId(key),menu=byId(key+'Options');if(document.activeElement===input && menu && !menu.hidden)return;input.value=selected.length===1?selected[0]:selected.length?selected.length+' selected':'';input.placeholder='All '+FILTERS.find(f=>f.key===key).label;}
+  function renderComboMenu(key){
+    const menu=byId(key+'Options');if(!menu)return;
+    const scroll=menu.scrollTop,selected=getFilters()[key]||[],q=text(comboQueries.get(key)).toLowerCase();
+    const values=(optionsByKey.get(key)||[]).filter(v=>v.toLowerCase().includes(q));
+    const focusValue=menu.contains(document.activeElement)?document.activeElement.dataset.value:null;
     menu.replaceChildren();
-    const filters = getFilters(), selected = filters[key] || [];
-    const q = text(comboQueries.get(key)).toLowerCase();
-    const values = (optionsByKey.get(key) || []).filter(v => v.toLowerCase().includes(q));
-    const add = (label, value, isAll) => {
-      const current = isAll ? selected.length === 0 : selected.includes(value);
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'combo-option' + (current ? ' is-current' : '');
-      const c = document.createElement('span'); c.className = 'combo-check'; c.textContent = current ? '✓' : '';
-      const s = document.createElement('span'); s.textContent = label;
-      b.append(c, s);
-      b.onclick = () => {
-        const f = getFilters();
-        if (isAll) f[key] = [];
-        else if (f[key].includes(value)) f[key] = f[key].filter(x => x !== value);
-        else f[key] = f[key].concat(value);
-        saveFilters(f); onChange(); renderComboMenu(key);
-      };
-      menu.append(b);
-    };
-    add('All ' + (FILTERS.find(f => f.key === key)?.label || key), '__ALL__', true);
-    if (!values.length) {
-      const e = document.createElement('div');
-      e.className = 'combo-empty'; e.textContent = 'No matching values';
-      menu.append(e);
-    } else values.forEach(v => add(v, v, false));
-  }
-  function refresh() {
-    const filters = getFilters(), rows = getRows();
-    FILTERS.forEach(f => {
-      const wrap = document.querySelector(`[data-field="${f.key}"]`);
-      const available = availableKey(f.key);
-      if (wrap) wrap.hidden = !available;
-      if (!available) { filters[f.key] = []; return; }
-      const related = rows.filter(r => FILTERS.every(other =>
-        other.key === f.key || !availableKey(other.key) || filterMatches(fieldValue(r, other.key), filters[other.key])));
-      const values = [...new Set(related.map(r => display(fieldValue(r, f.key))).filter(v => v !== '—'))]
-        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-      optionsByKey.set(f.key, values);
-      updateComboInput(f.key);
-      renderComboMenu(f.key);
+    const toolbar=document.createElement('div');toolbar.className='combo-tools';
+    for(const [label,action] of [['Select all',()=>{getFilters()[key]=[...new Set([...selected,...values])];commit();}],['Clear',()=>{getFilters()[key]=[];commit();}]]){
+      const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=action;toolbar.append(b);
+    }
+    const note=document.createElement('small');note.textContent=selected.length+' selected / '+values.length+' available';toolbar.append(note);menu.append(toolbar);
+    const list=document.createElement('div');list.id=key+'List';list.setAttribute('role','listbox');list.setAttribute('aria-label',FILTERS.find(f=>f.key===key).label);list.setAttribute('aria-multiselectable','true');menu.append(list);
+    values.forEach(value=>{
+      const current=selected.includes(value),b=document.createElement('button');b.type='button';b.className='combo-option'+(current?' is-current':'');b.dataset.value=value;b.setAttribute('role','option');b.setAttribute('aria-selected',String(current));
+      const c=document.createElement('span');c.className='combo-check';c.textContent=current?'✓':'';c.setAttribute('aria-hidden','true');
+      const label=document.createElement('span');label.className='combo-option-name';label.textContent=value;
+      const count=document.createElement('span');count.className='combo-count';count.textContent=countsByKey.get(key)?.get(value)||0;
+      b.append(c,label,count);b.onclick=()=>{const f=getFilters();f[key]=f[key].includes(value)?f[key].filter(x=>x!==value):f[key].concat(value);commit();};
+      b.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCombo(key);byId(key).focus();closeCombo(key);}if(['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();(e.key==='ArrowDown'?b.nextElementSibling:b.previousElementSibling)?.focus();}});list.append(b);
     });
+    if(!values.length){const n=document.createElement('p');n.className='combo-empty';n.textContent='No matching values';list.append(n);}
+    if(focusValue)[...list.children].find(n=>n.dataset.value===focusValue)?.focus({preventScroll:true});
+    menu.scrollTop=scroll;
   }
-  document.addEventListener('pointerdown', e => { if (!e.target.closest('.combobox')) closeAll(); });
-  return { refresh, closeAll };
+  function refresh(){
+    const filters=getFilters(),rows=getRows();
+    FILTERS.forEach(f=>{
+      const wrap=host.querySelector(`[data-field="${f.key}"]`),available=availableKey(f.key);wrap.hidden=!available;
+      if(!available){filters[f.key]=[];return;}
+      const related=rows.filter(r=>FILTERS.every(other=>other.key===f.key||!availableKey(other.key)||filterMatches(fieldValue(r,other.key),filters[other.key])));
+      const counts=new Map();related.forEach(r=>{const v=display(fieldValue(r,f.key));if(v!=='—')counts.set(v,(counts.get(v)||0)+1);});
+      countsByKey.set(f.key,counts);
+      optionsByKey.set(f.key,[...new Set([...counts.keys(),...(filters[f.key]||[])])].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})));
+      byId(f.key+'Count').textContent=filters[f.key].length||'';wrap.classList.toggle('is-selected',!!filters[f.key].length);
+      updateComboInput(f.key);renderComboMenu(f.key);
+    });
+    const pills=byId('activeFilters');if(pills){pills.replaceChildren();FILTERS.forEach(f=>(filters[f.key]||[]).forEach(value=>{const b=document.createElement('button');b.type='button';b.className='filter-pill';b.textContent=f.label+': '+value+' ×';b.setAttribute('aria-label','Remove '+f.label+' filter '+value);b.onclick=()=>{filters[f.key]=filters[f.key].filter(v=>v!==value);commit();};pills.append(b);}));}
+  }
+  document.addEventListener('pointerdown',e=>{if(!e.target.closest('.combobox'))closeAll();},{capture:true});
+  return {refresh,closeAll};
 }
 
 function filterMatches(value, selected) {

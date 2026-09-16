@@ -1,37 +1,40 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Outlet Network Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="./assets/theme.css">
-<script src="./assets/core.js"></script>
+<link rel="stylesheet" href="./assets/redesign.css?v=20260916">
+<script src="./assets/redesign.js?v=20260916" defer></script>
+<script src="./assets/core.js?v=20260916"></script>
 </head>
 <body>
+<a class="skip-link" href="#mainContent">Skip to dashboard</a>
+<button class="rail-scrim" id="railScrim" type="button" aria-label="Close filters" hidden></button>
 <main class="page">
   <header class="topbar">
     <div class="brand">
-      <h1>Outlet Network Dashboard</h1>
+      <h1>Outlet network</h1>
       <span class="brand-tag" id="monthChip">—</span>
     </div>
     <div class="actions">
-      <a class="button home" href="https://operations-t.github.io/Dashboard-Portal/" target="_blank" rel="noopener noreferrer">⌂ Home</a>
-      <a class="button is-active" href="./index.html" aria-current="page">Network overview</a>
-      <a class="button" href="./insights.html">Growth &amp; momentum ›</a>
       <button class="button primary" id="clearFilters" type="button">Clear filters</button>
       <button class="button" id="sidebarToggle" type="button" aria-controls="filterPanel" aria-expanded="true">Hide sidebar</button>
       <button class="button icon-only" data-theme-toggle type="button" aria-pressed="false">🌙 Dark</button>
-      <label class="button" for="salesFileInput">Upload sales<input id="salesFileInput" class="sr-only" type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.csv"></label>
+      <details class="data-tools"><summary class="button">Data options</summary><div class="data-tools-menu">      <label class="button" for="salesFileInput">Upload sales<input id="salesFileInput" class="sr-only" type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.csv"></label>
       <label class="button" for="fileInput">Upload master<input id="fileInput" class="sr-only" type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.csv"></label>
-      <button class="button" id="resetData" type="button">Reset</button>
+      <button class="button" id="resetData" type="button">Reset</button></div></details>
     </div>
   </header>
   <div class="message" id="message" role="status" aria-live="polite"></div>
 
   <div class="shell">
-    <aside class="sidebar" id="filterPanel">
-      <div class="sidebar-head"><div><span class="section-kicker">Controls</span><h2>Explore outlet network</h2><p id="snapshotText">Loading snapshot…</p></div></div>
+    <aside class="sidebar" id="filterPanel" aria-label="Navigation and filters"><div class="rail-brand"><span class="brand-mark" aria-hidden="true">S</span><div><strong>Shwapno</strong><span>Outlet intelligence</span></div><button class="button rail-close" id="railClose" type="button" aria-label="Close navigation and filters">✕</button></div><nav class="rail-nav" aria-label="Dashboard pages">      <a class="button home" href="https://operations-t.github.io/Dashboard-Portal/" target="_blank" rel="noopener noreferrer">⌂ Home</a>
+      <a class="button is-active" href="./index.html" aria-current="page">Network overview</a>
+      <a class="button" href="./insights.html">Growth &amp; momentum</a></nav>
+      <div class="sidebar-head"><div><h2>Explore outlet network</h2><p id="snapshotText">Loading snapshot…</p></div></div>
       <div class="period-box">
         <div class="period-mode-toggle" role="group" aria-label="Sales period mode">
           <button class="active" type="button" data-sales-period-mode="through">Through date</button>
@@ -44,10 +47,11 @@
       <p class="filter-summary" id="filterSummary"></p>
     </aside>
 
-    <section class="content">
+    <section class="content" id="mainContent">
+      <div class="selection-strip"><p class="scope-line" id="scopeLine">Loading network…</p><div id="activeFilters" class="active-filters" aria-label="Selected filters"></div></div>
       <section class="card" id="salesPerformance">
         <div class="section-head">
-          <div><span class="section-kicker">Performance</span><h2>Sales performance</h2><p id="salesPeriodText">Target, actual and month-end projection.</p></div>
+          <div><h2>Sales performance</h2><p id="salesPeriodText">Target, actual and month-end projection.</p></div>
         </div>
         <div class="section-body">
           <div class="sales-scorecards">
@@ -83,12 +87,12 @@
             </article>
           </div>
 
-          <details class="sales-breakdown" id="salesBreakdownDetails" open>
-            <summary><h3 id="salesBreakdownTitle">Regional Head Actual vs Target</h3><span class="collapse-indicator" aria-hidden="true"></span></summary>
+          <details class="sales-breakdown" id="salesBreakdownDetails">
+            <summary><h3 id="salesBreakdownTitle">Regional head actual vs target</h3><span class="collapse-indicator" aria-hidden="true"></span></summary>
             <div class="sales-breakdown-content">
               <div class="sales-breakdown-toolbar">
                 <div class="segmented"><button type="button" data-sales-breakdown-mode="zonal">Zonal</button><button class="active" type="button" data-sales-breakdown-mode="regional">Regional Head</button></div>
-                <button class="button tiny" id="downloadBreakdownCsv" type="button">⭳ CSV</button>
+                <button class="button tiny" id="downloadBreakdownCsv" type="button">Download CSV</button>
               </div>
               <div class="sales-breakdown-head breakdown-grid">
                 <span>Name</span><span>Target (TD)</span><span>Actual (TD)</span><span id="breakdownLastMonthHead">Last month</span>
@@ -100,7 +104,7 @@
         </div>
       </section>
 
-      <section class="kpis" id="kpis">
+      <section class="kpis" id="kpis" aria-live="polite">
         <article class="kpi"><p class="kpi-label">Total outlets</p><p class="kpi-value" id="kpiOutlets">—</p><p class="kpi-note">Selected network</p></article>
         <article class="kpi"><p class="kpi-label">Total SFT</p><p class="kpi-value" id="kpiSft">—</p><p class="kpi-note">Valid floor area</p></article>
         <article class="kpi"><p class="kpi-label">Average SFT</p><p class="kpi-value" id="kpiAvgSft">—</p><p class="kpi-note">Per outlet</p></article>
@@ -121,7 +125,7 @@
             <div><h2>Number of outlets overseeing</h2><p>Click an outlet-count number to open those outlets in Detail View</p></div>
             <div class="section-head-actions">
               <div class="segmented"><button type="button" data-oversight-mode="zonal">Zonal Qty</button><button class="active" type="button" data-oversight-mode="regional">RHO Qty</button></div>
-              <button class="button tiny" id="downloadOversightCsv" type="button">⭳ CSV</button>
+              <button class="button tiny" id="downloadOversightCsv" type="button">Download CSV</button>
             </div>
           </div>
           <div class="chart-body"><div class="chart-scroll scroll-chain"><div id="oversightChart" class="bar-list"></div></div></div>
@@ -148,7 +152,7 @@
                 <button class="active" type="button" data-launch-mode="year">By launch year</button>
                 <button type="button" data-launch-mode="month">This year, month-wise</button>
               </div>
-              <button class="button tiny" id="downloadLaunchCsv" type="button">⭳ CSV</button>
+              <button class="button tiny" id="downloadLaunchCsv" type="button">Download CSV</button>
             </div>
             <div class="sales-breakdown-head breakdown-grid">
               <span id="launchHeadLabel">Launch year</span><span>Outlets</span><span>Total SFT</span><span>Avg SFT</span>
@@ -162,15 +166,15 @@
       <section class="card" id="directoryCard">
         <div class="section-head">
           <div>
-            <span class="section-kicker">Directory</span>
-            <h2 id="directoryTitle">DETAIL VIEW — Outlet-wise Zone Distribution</h2>
+
+            <h2 id="directoryTitle">Outlet register</h2>
             <p id="tableNote">Click a chart number to drill into matching outlets. Click a header to sort; double-click to filter.</p>
             <p id="detailDrillStatus" class="detail-drill-status" hidden></p>
           </div>
           <div class="directory-controls">
             <button class="button" id="clearDetailDrill" type="button" hidden>Clear clicked filter</button>
             <div class="table-search"><input id="outletSearch" type="search" placeholder="Search displayed rows…"></div>
-            <button class="button" id="downloadDirectoryCsv" type="button">⭳ Download CSV</button>
+            <button class="button" id="downloadDirectoryCsv" type="button">Download CSV</button>
           </div>
         </div>
         <div class="table-wrap">
@@ -328,14 +332,14 @@ function nameCell(name) {
 }
 function badgeCell(tone, label) {
   const d = document.createElement('div');
-  d.className = 'badge ' + tone; d.textContent = label;
+  d.className = 'badge ' + tone; d.textContent = label; const status = document.createElement('small'); status.textContent = ({good:'On target',watch:'Watch',bad:'Below target',neutral:'No target'})[tone] || ''; d.append(status);
   return d;
 }
 
 function renderSalesBreakdown(data) {
   const key = salesBreakdownMode === 'regional' ? (availableKey('regionalHead') ? 'regionalHead' : 'leader') : 'zonal';
   const label = salesBreakdownMode === 'regional' ? 'Regional Head' : 'Zonal';
-  byId('salesBreakdownTitle').textContent = label + ' Actual vs Target';
+  byId('salesBreakdownTitle').textContent = label + ' actual vs target';
   byId('breakdownLastMonthHead').textContent = lastMonthName;
   document.querySelectorAll('[data-sales-breakdown-mode]').forEach(b => b.classList.toggle('active', b.dataset.salesBreakdownMode === salesBreakdownMode));
 
@@ -701,7 +705,7 @@ function render() {
   filterPanel.refresh();
   const data = selectedRows();
   const active = FILTERS.filter(f => filters[f.key]?.length).map(f => f.label + ': ' + filters[f.key].join(', '));
-  byId('filterSummary').textContent = active.join(' · ');
+  byId('filterSummary').textContent = `${nf.format(data.length)} outlets in view` + (active.length ? ' · ' + active.join(' · ') : ' · All regions');
   renderSales(data);
   renderKpis(data);
   renderCharts(data);
@@ -909,11 +913,7 @@ byId('clearFilters').addEventListener('click', () => {
   render();
 });
 byId('clearDetailDrill').addEventListener('click', () => { detailDrill = null; updateDetailDrillUi(); renderTable(selectedRows()); });
-byId('sidebarToggle').addEventListener('click', () => {
-  const shell = document.querySelector('.shell'), hidden = shell.classList.toggle('sidebar-hidden'), btn = byId('sidebarToggle');
-  btn.textContent = hidden ? 'Show sidebar' : 'Hide sidebar';
-  btn.setAttribute('aria-expanded', String(!hidden));
-});
+
 byId('resetData').addEventListener('click', () => { filters = emptyFilters(); saveFilters(filters); init(); });
 byId('outletSearch').addEventListener('input', e => { tableQuery = e.target.value; renderTable(selectedRows()); });
 byId('downloadDirectoryCsv').addEventListener('click', downloadDirectoryCsv);
