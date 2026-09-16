@@ -3,183 +3,198 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08191f">
 <title>Growth &amp; Momentum — Outlet Network</title>
-<link rel="stylesheet" href="./assets/theme.css">
-<link rel="stylesheet" href="./assets/redesign.css?v=20260916">
-<script src="./assets/redesign.js?v=20260916" defer></script>
-<script src="./assets/core.js?v=20260916"></script>
+<link rel="stylesheet" href="./assets/shwapno.css?v=20260916b">
+<script src="./assets/core.js?v=20260916b"></script>
+<script src="./assets/profile.js?v=20260916b" defer></script>
+<link rel="stylesheet" href="./assets/report.css?v=20260916b">
+<script src="./assets/vendor/html2canvas.min.js" defer></script>
 </head>
 <body>
-<a class="skip-link" href="#mainContent">Skip to dashboard</a>
-<button class="rail-scrim" id="railScrim" type="button" aria-label="Close filters" hidden></button>
-<main class="page">
-  <header class="topbar">
-    <div class="brand">
-      <h1>Growth &amp; momentum</h1>
-      <span class="brand-tag" id="monthChip">—</span>
-    </div>
-    <div class="actions">
-      <button class="button primary" id="clearFilters" type="button">Clear filters</button>
-      <button class="button" id="openReport" type="button">RHO summary report</button>
-      <button class="button" id="sidebarToggle" type="button" aria-controls="filterPanel" aria-expanded="true">Hide sidebar</button>
-      <button class="button icon-only" data-theme-toggle type="button" aria-pressed="false">🌙 Dark</button>
-    </div>
-  </header>
-  <div class="message" id="message" role="status" aria-live="polite"></div>
+<a class="skip-link" href="#view">Skip to dashboard</a>
+<button class="scrim" id="railScrim" type="button" aria-label="Close filters" hidden></button>
 
-  <div class="shell">
-    <aside class="sidebar" id="filterPanel" aria-label="Navigation and filters"><div class="rail-brand"><span class="brand-mark" aria-hidden="true">S</span><div><strong>Shwapno</strong><span>Outlet intelligence</span></div><button class="button rail-close" id="railClose" type="button" aria-label="Close navigation and filters">✕</button></div><nav class="rail-nav" aria-label="Dashboard pages">      <a class="button home" href="https://operations-t.github.io/Dashboard-Portal/" target="_blank" rel="noopener noreferrer">⌂ Home</a>
-      <a class="button" href="./index.html">Network overview</a>
-      <a class="button is-active" href="./insights.html" aria-current="page">Growth &amp; momentum</a></nav>
-      <div class="sidebar-head"><div><h2>Filter the network</h2><p id="snapshotText">Loading snapshot…</p></div></div>
-      <div class="period-box">
-        <div class="date-stack"><label for="salesThroughDate">Sales through<input id="salesThroughDate" type="date"></label></div>
+<div class="app">
+  <aside class="rail" id="rail" aria-label="Pages and filters" tabindex="-1">
+    <div class="rail-brand">
+      <span class="brand-mark" aria-hidden="true">S</span>
+      <div><span class="brand-name">Shwapno</span><span class="brand-sub">Outlet network</span></div>
+      <button class="rail-close" id="railClose" type="button" aria-label="Close filters">×</button>
+    </div>
+    <nav class="rail-nav" aria-label="Dashboard pages">
+      <a class="nav-item" href="https://operations-t.github.io/Dashboard-Portal/" target="_blank" rel="noopener"><span class="nav-glyph" aria-hidden="true">⌂</span>Home</a>
+      <div class="nav-divider"></div>
+      <a class="nav-item" href="./index.html"><span class="nav-glyph" aria-hidden="true">▦</span>Network overview</a>
+      <a class="nav-item is-active" href="./insights.html" aria-current="page"><span class="nav-glyph" aria-hidden="true">↗</span>Growth &amp; momentum</a>
+    </nav>
+
+    <div class="rail-section">
+      <div class="rail-head"><h2>Sales period</h2></div>
+      <label class="field">Month start through
+        <input id="salesThroughDate" type="date">
+      </label>
+      <p class="rail-note">Everything on this page runs from the 1st to this date, then projects the rest of the month.</p>
+    </div>
+
+    <div class="rail-section" style="padding-bottom:0">
+      <div class="rail-head"><h2>Filters</h2><button class="text-button" id="railReset" type="button">Reset</button></div>
+    </div>
+    <div class="rail-filters" id="filterFields"></div>
+
+    <div class="rail-foot">
+      <div class="rail-stat"><span>Outlets in view</span><strong id="footOutlets">—</strong></div>
+      <div class="rail-stat"><span>Network</span><strong id="footNetwork">—</strong></div>
+      <p class="rail-note" id="snapshotText">Loading snapshot…</p>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="btn btn-icon rail-toggle" id="railToggle" type="button" aria-controls="rail" aria-expanded="false">☰ Filters</button>
+      <div class="topbar-title">
+        <h1>Growth &amp; momentum</h1>
+        <p class="topbar-scope" id="scopeLine">Loading…</p>
       </div>
-      <div class="sidebar-fields" id="filterFields"></div>
-      <p class="filter-summary" id="filterSummary"></p>
-    </aside>
+      <div class="topbar-actions">
+        <div class="freshness" title="Latest day with sales in the data"><i class="live-dot" aria-hidden="true"></i><span>Sales through</span><strong id="freshDate">—</strong></div>
+        <button class="btn btn-clear" id="clearFilters" type="button">Clear filters</button>
+        <button class="btn" id="openReport" type="button">Regional head report</button>
+        <button class="btn" data-theme-toggle type="button">☀ Light</button>
+      </div>
+    </header>
+    <div class="message" id="message" role="status" aria-live="polite"></div>
 
-    <section class="content" id="mainContent">
-      <div class="selection-strip"><p class="scope-line" id="scopeLine">Loading network…</p><div id="activeFilters" class="active-filters" aria-label="Selected filters"></div></div>
-      <!-- ---------- hero ---------- -->
-      <section class="card">
-        <div class="section-head">
-          <div><h2 id="insightsHeadline">Where the network is heading</h2><p id="heroSubtitle">Month-end projection measured against last month's actual.</p></div>
+    <main class="view" id="view">
+      <div class="active-filters" id="activeFilters" aria-label="Selected filters" hidden></div>
+
+      <section class="panel" aria-labelledby="heroTitle">
+        <div class="panel-head">
+          <div><h2 id="heroTitle">Where the network is heading</h2><p id="heroSubtitle">Month-end projection against last month and the monthly target.</p></div>
         </div>
-        <div class="section-body">
-          <div class="kpis wide" aria-live="polite" style="margin-bottom:0">
-            <article class="kpi"><p class="kpi-label">Total target</p><p class="kpi-value" id="heroTotalTarget">—</p><p class="kpi-note" id="heroTotalTargetNote">Full-month target</p></article>
-            <article class="kpi"><p class="kpi-label">Total actual</p><p class="kpi-value" id="heroTotalActual">—</p><p class="kpi-note" id="heroTotalActualNote">Sales till date</p></article>
-            <article class="kpi"><p class="kpi-label" id="heroLastLabel">Last month</p><p class="kpi-value" id="insHeroLast">—</p><p class="kpi-note" id="heroLastNote">Full-month actual</p></article>
-            <article class="kpi"><p class="kpi-label">Projected this month</p><p class="kpi-value" id="insHeroProjected">—</p><p class="kpi-note" id="heroProjNote">Run-rate model</p></article>
-            <article class="kpi" id="heroGrowthCard"><p class="kpi-label">MoM growth</p><p class="kpi-value" id="insHeroGrowth">—</p><p class="kpi-note" id="heroGrowthNote">Projected vs last month</p></article>
-            <article class="kpi"><p class="kpi-label">Target achievement</p><p class="kpi-value" id="heroAch">—</p><p class="kpi-note" id="heroAchNote">Projected vs monthly target</p></article>
-            <article class="kpi good"><p class="kpi-label">Outlets growing</p><p class="kpi-value" id="heroGrowing">—</p><p class="kpi-note" id="heroGrowingNote">MoM above +2%</p></article>
-            <article class="kpi bad"><p class="kpi-label">Outlets declining</p><p class="kpi-value" id="heroDeclining">—</p><p class="kpi-note" id="heroDecliningNote">MoM below −2%</p></article>
-            <article class="kpi"><p class="kpi-label">Daily run rate</p><p class="kpi-value" id="heroRunRate">—</p><p class="kpi-note" id="heroRunRateNote">Average observed day</p></article>
-          </div>
-        </div>
+        <div class="panel-body"><div class="kpi-grid six" id="heroKpis" aria-live="polite"></div></div>
+        <div class="stat-strip" id="momentumStrip" style="border-top:1px solid var(--line-soft)"></div>
       </section>
 
-      <!-- ---------- auto callouts ---------- -->
-      <section class="card">
-        <div class="section-head"><div><h2>What the numbers are saying</h2><p>Generated from the outlets currently in view — changes as you filter.</p></div></div>
-        <div class="section-body"><div class="insight-callouts" id="callouts"></div></div>
+      <section class="panel" aria-labelledby="calloutTitle">
+        <div class="panel-head">
+          <div><h2 id="calloutTitle">What the numbers are saying</h2><p>Written from the outlets in view; it changes as you filter.</p></div>
+        </div>
+        <div class="panel-body"><div class="findings" id="callouts"></div></div>
       </section>
 
-      <!-- ---------- momentum quadrant ---------- -->
-      <section class="card">
-        <div class="section-head">
-          <div><h2>Momentum quadrant</h2><p>Month-on-month growth against projected target achievement. Shape and label carry the group; colour is a second cue.</p></div>
-          <div class="section-head-actions">
-            <div class="segmented">
-              <button class="active" type="button" data-quad-level="regionalHead">Regional Head</button>
-              <button type="button" data-quad-level="zonal">Zonal</button>
-              <button type="button" data-quad-level="outlet">Outlet</button>
+      <section class="panel" aria-labelledby="quadTitle">
+        <div class="panel-head">
+          <div><h2 id="quadTitle">Momentum quadrant</h2><p>Month-on-month growth against projected target achievement. Marker shape names the quadrant; size is projected sales.</p></div>
+          <div class="panel-tools">
+            <div class="seg" role="group" aria-label="Quadrant level">
+              <button type="button" data-quad-level="regionalHead" aria-pressed="true">Regional head</button>
+              <button type="button" data-quad-level="zonal" aria-pressed="false">Zonal</button>
+              <button type="button" data-quad-level="outlet" aria-pressed="false">Outlet</button>
             </div>
-            <button class="button tiny" id="downloadQuadrantCsv" type="button">Download CSV</button>
+            <button class="btn btn-sm" id="downloadQuadrantCsv" type="button">Download CSV</button>
           </div>
         </div>
-        <div class="section-body">
-          <div class="quadrant-wrap"><svg id="quadrantChart" class="quadrant-svg" viewBox="0 0 1000 520" role="img" aria-labelledby="quadrantTitle"><title id="quadrantTitle">Momentum quadrant scatter plot</title></svg></div>
-          <div class="quadrant-legend" id="quadrantLegend"></div>
-          <p class="viz-note" id="quadrantNote"></p>
+        <div class="panel-body">
+          <div class="chart"><svg id="quadrantChart" viewBox="0 0 1000 440" role="img" aria-labelledby="quadrantTitle"><title id="quadrantTitle">Momentum quadrant scatter plot</title></svg></div>
+          <div class="quad-legend" id="quadrantLegend"></div>
+          <p class="note" id="quadrantNote"></p>
         </div>
       </section>
 
-      <div class="chart-grid">
-        <!-- ---------- movers ---------- -->
-        <section class="chart-card">
-          <div class="section-head">
-            <div><h2>Top movers</h2><p id="moversSubtitle">Change in monthly sales versus last month</p></div>
-            <div class="section-head-actions">
-              <div class="segmented">
-                <button class="active" type="button" data-mover-level="regionalHead">RHO</button>
-                <button type="button" data-mover-level="zonal">Zonal</button>
-                <button type="button" data-mover-level="outlet">Outlet</button>
+      <div class="grid grid-halves">
+        <section class="panel" aria-labelledby="moversTitle">
+          <div class="panel-head">
+            <div><h2 id="moversTitle">Top movers</h2><p id="moversSubtitle">Change in projected sales against last month.</p></div>
+            <div class="panel-tools">
+              <div class="seg" role="group" aria-label="Mover level">
+                <button type="button" data-mover-level="regionalHead" aria-pressed="true">Regional head</button>
+                <button type="button" data-mover-level="zonal" aria-pressed="false">Zonal</button>
+                <button type="button" data-mover-level="outlet" aria-pressed="false">Outlet</button>
               </div>
-              <button class="button tiny" id="downloadMoversCsv" type="button">Download CSV</button>
+              <div class="seg" role="group" aria-label="Direction">
+                <button type="button" data-mover-dir="gain" aria-pressed="true">Gainers</button>
+                <button type="button" data-mover-dir="loss" aria-pressed="false">Decliners</button>
+              </div>
+              <button class="btn btn-sm" id="downloadMoversCsv" type="button">Download CSV</button>
             </div>
           </div>
-          <div class="chart-body">
-            <div class="segmented" style="margin-bottom:10px;max-width:280px">
-              <button class="active" type="button" data-mover-dir="gain">Gainers</button>
-              <button type="button" data-mover-dir="loss">Decliners</button>
-            </div>
-            <div class="chart-scroll scroll-chain"><div id="moversList" class="mover-list"></div></div>
-            <p class="viz-note" id="moversNote">Bar length is the BDT change; the percentage is growth against the same group's last-month base.</p>
+          <div class="panel-body">
+            <div class="rank-list scroll-y" id="moversList"></div>
+            <p class="note" id="moversNote"></p>
           </div>
         </section>
 
-        <!-- ---------- heatmap ---------- -->
-        <section class="chart-card">
-          <div class="section-head">
-            <div><h2>Trading-day heatmap</h2><p id="heatSubtitle">Network sales by week and weekday</p></div>
-            <button class="button tiny" id="downloadHeatCsv" type="button">Download CSV</button>
+        <section class="panel" aria-labelledby="heatTitle">
+          <div class="panel-head">
+            <div><h2 id="heatTitle">Trading-day heatmap</h2><p id="heatSubtitle">Network sales by week and weekday.</p></div>
+            <div class="panel-tools"><button class="btn btn-sm" id="downloadHeatCsv" type="button">Download CSV</button></div>
           </div>
-          <div class="chart-body">
+          <div class="panel-body">
             <div class="heatmap" id="heatmap"></div>
-            <p class="viz-note" id="heatNote"></p>
+            <p class="note" id="heatNote"></p>
           </div>
         </section>
       </div>
 
-      <!-- ---------- trajectory ---------- -->
-      <section class="card">
-        <div class="section-head">
-          <div><h2>Month trajectory</h2><p id="trajectorySubtitle">Cumulative sales against cumulative target, with the projected finish</p></div>
-          <button class="button tiny" id="downloadTrajectoryCsv" type="button">Download CSV</button>
+      <section class="panel" aria-labelledby="trajTitle">
+        <div class="panel-head">
+          <div><h2 id="trajTitle">Month trajectory</h2><p id="trajectorySubtitle">Cumulative sales against cumulative target, with the projected finish.</p></div>
+          <div class="panel-tools"><button class="btn btn-sm" id="downloadTrajectoryCsv" type="button">Download CSV</button></div>
         </div>
-        <div class="section-body">
-          <ul class="viz-legend">
-            <li><span class="viz-swatch" style="background:var(--series-1)"></span>Actual to date</li>
-            <li><span class="viz-swatch" style="background:repeating-linear-gradient(90deg,var(--series-1) 0 5px,transparent 5px 9px)"></span>Projected finish</li>
-            <li><span class="viz-swatch dash"></span>Cumulative target</li>
-          </ul>
-          <svg id="trajectoryChart" class="trajectory-svg" viewBox="0 0 1000 330" role="img" aria-labelledby="trajectoryTitle"><title id="trajectoryTitle">Cumulative sales versus target across the month</title></svg>
-          <p class="viz-note" id="trajectoryNote"></p>
+        <div class="panel-body">
+          <div class="chart-legend">
+            <span><i class="swatch" style="background:var(--series-2)"></i>Actual to date</span>
+            <span><i class="swatch dash-1" style="border-top-color:var(--series-2)"></i>Projected finish</span>
+            <span><i class="swatch dash"></i>Cumulative target</span>
+          </div>
+          <div class="chart"><svg id="trajectoryChart" viewBox="0 0 1000 330" role="img" aria-labelledby="trajectoryTitle"><title id="trajectoryTitle">Cumulative sales against target across the month</title></svg></div>
+          <p class="note" id="trajectoryNote"></p>
         </div>
       </section>
 
-      <!-- ---------- league table ---------- -->
-      <section class="card">
-        <div class="section-head">
-          <div><h2 id="leagueTitle">Regional Head league table</h2><p>Click a header to sort. Every column exports to CSV.</p></div>
-          <div class="section-head-actions">
-            <div class="segmented">
-              <button class="active" type="button" data-league-level="regionalHead">Regional Head</button>
-              <button type="button" data-league-level="zonal">Zonal</button>
-              <button type="button" data-league-level="division">Division</button>
-              <button type="button" data-league-level="format">Format</button>
+      <section class="panel" aria-labelledby="leagueTitle">
+        <div class="panel-head">
+          <div><h2 id="leagueTitle">Regional head league table</h2><p>Click a heading to sort. The CSV has every column.</p></div>
+          <div class="panel-tools">
+            <div class="seg" role="group" aria-label="League level">
+              <button type="button" data-league-level="regionalHead" aria-pressed="true">Regional head</button>
+              <button type="button" data-league-level="zonal" aria-pressed="false">Zonal</button>
+              <button type="button" data-league-level="division" aria-pressed="false">Division</button>
+              <button type="button" data-league-level="format" aria-pressed="false">Format</button>
             </div>
-            <button class="button tiny" id="downloadLeagueCsv" type="button">Download CSV</button>
+            <button class="btn btn-sm" id="downloadLeagueCsv" type="button">Download CSV</button>
           </div>
         </div>
-        <div class="table-wrap">
-          <div class="table-scroll league-scroll"><table><thead id="leagueHead"></thead><tbody id="leagueBody"></tbody></table></div>
-          <div class="table-note-line"><span id="leagueCount">0 groups</span><span>Sorted by projected month-end sales by default.</span></div>
-        </div>
+        <div class="table-wrap" id="leagueTable"></div>
+        <div class="panel-foot"><span id="leagueCount"></span><span>Sorted by projected month-end sales until you pick a column.</span></div>
       </section>
-      <p class="footer-note">Outlet Network Dashboard · Growth &amp; Momentum · GitHub Pages</p>
-    </section>
-  </div>
-</main>
 
-<div id="reportOverlay" role="dialog" aria-modal="true" aria-label="Regional Head summary report">
+      <p class="footer-note">Outlet Network Dashboard · Growth &amp; momentum · refreshed from Google Drive</p>
+    </main>
+  </div>
+</div>
+
+<button class="scrim" id="drawerScrim" type="button" aria-label="Close outlet profile" hidden></button>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+  <div class="drawer-head"><div><h2 id="drawerTitle"></h2><p id="drawerSubtitle"></p></div><button class="drawer-close" id="drawerClose" type="button" aria-label="Close outlet profile">×</button></div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+
+<div id="reportOverlay" role="dialog" aria-modal="true" aria-label="Regional head summary report">
   <div class="report-toolbar">
     <div>
-      <h2>Regional Head Summary Report</h2>
+      <h2>Regional head summary report</h2>
       <p id="reportMeta">—</p>
     </div>
     <span class="spacer"></span>
     <span class="report-busy" id="reportBusy" hidden>Rendering image…</span>
-    <button class="button primary" id="reportPrint" type="button">🖨 Print / Save as PDF</button>
-    <button class="button" id="reportPng" type="button">🖼 Download PNG</button>
-    <button class="button" id="reportClose" type="button">✕ Close</button>
+    <button class="btn primary" id="reportPrint" type="button">Print or save as PDF</button>
+    <button class="btn" id="reportPng" type="button">Download PNG</button>
+    <button class="btn" id="reportClose" type="button">Close</button>
   </div>
   <div class="report-sheet" id="reportSheet"></div>
 </div>
-<script src="./assets/vendor/html2canvas.min.js" defer></script>
 
 <script>
 (() => {
@@ -189,8 +204,15 @@ const {
   salesDateValue, FILTERS, refreshSalesCalculations, allSalesDates, actualSalesDates, sum,
   performanceTone, growthTone, emptyFilters, loadFilters, saveFilters, filterMatches, createFilterPanel,
   downloadCsv, stamp, loadDashboardData, setMessage, clearMessage, enableScrollChain, initTheme,
-  attachTooltip, showTooltip, hideTooltip, svgEl, escapeHtml, palette, readableInk
+  attachTooltip, showTooltip, hideTooltip, svgEl, escapeHtml, palette, readableInk,
+  moneyExact, toneChip, chip, sortHeader, compareNullable
 } = window.OND;
+const O = window.OND;
+const pct0 = v => {
+  if (!Number.isFinite(v)) return '—';
+  const r = Math.round(v * 100);
+  return (v < 1 && r >= 100) || (v > 1 && r <= 100) ? (v * 100).toFixed(1) + '%' : r + '%';
+};
 
 let baseRows = [], rows = [], source = {}, meta = {};
 let filters = loadFilters(), filterPanel = null;
@@ -203,10 +225,10 @@ const WEEKDAYS = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 const SEQ_STEPS = ['--seq-100', '--seq-200', '--seq-300', '--seq-400', '--seq-500', '--seq-600', '--seq-700'];
 
 const QUADRANTS = {
-  accelerating: { key: 'accelerating', label: 'Accelerating', glyph: '▲', colorVar: '--status-good', note: 'Growing and on target' },
-  holding:      { key: 'holding',      label: 'Holding',      glyph: '●', colorVar: '--series-1',    note: 'On target but slowing' },
-  catching:     { key: 'catching',     label: 'Catching up',  glyph: '◆', colorVar: '--status-warning', note: 'Growing but short of target' },
-  atrisk:       { key: 'atrisk',       label: 'At risk',      glyph: '▼', colorVar: '--status-critical', note: 'Declining and below target' }
+  accelerating: { key: 'accelerating', label: 'Accelerating', glyph: '▲', colorVar: '--good', note: 'Growing and on target' },
+  holding:      { key: 'holding',      label: 'Holding',      glyph: '●', colorVar: '--info',        note: 'On target but slowing' },
+  catching:     { key: 'catching',     label: 'Catching up',  glyph: '◆', colorVar: '--warn', note: 'Growing but short of target' },
+  atrisk:       { key: 'atrisk',       label: 'At risk',      glyph: '▼', colorVar: '--bad', note: 'Declining and below target' }
 };
 function quadrantOf(growth, achievement) {
   const g = Number.isFinite(growth) ? growth : 0;
@@ -234,40 +256,48 @@ function levelLabel(level) {
 }
 function groupBy(data, level) {
   if (level === 'outlet') {
-    return data.map(r => ({
-      name: display(r.outletName) === '—' ? display(r.code) : `${display(r.code)} · ${display(r.outletName)}`,
-      sub: [display(r.leader || r.regionalHead), display(r.division)].filter(v => v !== '—').join(' · '),
-      outlets: 1,
-      target: num(r.targetToDate) || 0,
-      actual: num(r.salesToDate) || 0,
-      monthlyTarget: num(r.monthlyTarget) || 0,
-      projected: num(r.projectedSales) || 0,
-      lastMonth: num(r.lastMonthSales) || 0,
-      hasBase: num(r.lastMonthSales) !== null ? 1 : 0
-    })).map(withDerived);
+    return data.map(r => {
+      const base = num(r.lastMonthSales);
+      return withDerived({
+        code: r.code,
+        name: display(r.outletName) === '—' ? display(r.code) : `${display(r.code)} · ${display(r.outletName)}`,
+        sub: [display(r.leader || r.regionalHead), display(r.division)].filter(v => v !== '—').join(' · '),
+        outlets: 1,
+        target: num(r.targetToDate) || 0,
+        actual: num(r.salesToDate) || 0,
+        monthlyTarget: num(r.monthlyTarget) || 0,
+        projected: num(r.projectedSales) || 0,
+        lastMonth: base || 0,
+        projOnBase: base !== null ? (num(r.projectedSales) || 0) : 0,
+        hasBase: base !== null ? 1 : 0
+      });
+    });
   }
   const key = groupKeyFor(level), m = new Map();
   data.forEach(r => {
     const name = display(r[key]);
     if (name === '—') return;
-    const x = m.get(name) || { name, sub: '', outlets: 0, target: 0, actual: 0, monthlyTarget: 0, projected: 0, lastMonth: 0, hasBase: 0 };
+    const x = m.get(name) || { name, sub: '', outlets: 0, target: 0, actual: 0, monthlyTarget: 0, projected: 0, lastMonth: 0, projOnBase: 0, hasBase: 0 };
     x.outlets += 1;
     x.target += num(r.targetToDate) || 0;
     x.actual += num(r.salesToDate) || 0;
     x.monthlyTarget += num(r.monthlyTarget) || 0;
     x.projected += num(r.projectedSales) || 0;
-    if (num(r.lastMonthSales) !== null) { x.lastMonth += num(r.lastMonthSales); x.hasBase += 1; }
+    if (num(r.lastMonthSales) !== null) { x.lastMonth += num(r.lastMonthSales); x.projOnBase += num(r.projectedSales) || 0; x.hasBase += 1; }
     m.set(name, x);
   });
   return [...m.values()].map(x => withDerived({ ...x, sub: `${nf.format(x.outlets)} outlet${x.outlets === 1 ? '' : 's'}` }));
 }
+// Growth and change are measured only on outlets that have a last-month baseline,
+// so a group's new outlets never read as growth.
 function withDerived(x) {
+  const onBase = x.projOnBase !== undefined ? x.projOnBase : x.projected;
   return {
     ...x,
     achievement: x.target ? x.actual / x.target : null,
     projectedAchievement: x.monthlyTarget ? x.projected / x.monthlyTarget : null,
-    mom: x.lastMonth ? x.projected / x.lastMonth - 1 : null,
-    delta: x.lastMonth ? x.projected - x.lastMonth : null
+    mom: x.lastMonth ? onBase / x.lastMonth - 1 : null,
+    delta: x.lastMonth ? onBase - x.lastMonth : null
   };
 }
 
@@ -283,51 +313,72 @@ function renderHero(data) {
   const growth = lastTotal ? projOnBase / lastTotal - 1 : null;
   const ach = monthlyTarget ? projTotal / monthlyTarget : null;
   const achToDate = targetToDate ? actualToDate / targetToDate : null;
-
-  byId('heroTotalTarget').textContent = currency(monthlyTarget || null);
-  byId('heroTotalTargetNote').textContent = targetToDate ? `${currency(targetToDate)} due till date` : 'Full-month target';
-  const actualEl = byId('heroTotalActual');
-  actualEl.textContent = currency(actualToDate || null);
-  actualEl.className = 'kpi-value' + (achToDate === null ? '' : achToDate >= 1 ? ' positive' : ' negative');
-  byId('heroTotalActualNote').textContent = achToDate === null
-    ? 'Sales till date'
-    : `${percent(achToDate)} of till-date target · ${currency(actualToDate - targetToDate)} gap`;
-
-  byId('heroLastLabel').textContent = lastMonthName;
-  byId('insHeroLast').textContent = currency(lastTotal || null);
-  byId('heroLastNote').textContent = `${nf.format(withBase.length)} of ${nf.format(data.length)} outlets have a baseline`;
-  byId('insHeroProjected').textContent = currency(projTotal || null);
-
-  const growthEl = byId('insHeroGrowth');
-  growthEl.textContent = signedPercent(growth);
-  growthEl.className = 'kpi-value' + (growth === null ? '' : growth >= 0 ? ' positive' : ' negative');
-  const gTone = growthTone(growth);
-  byId('heroGrowthCard').className = 'kpi ' + (gTone.key === 'good' ? 'good' : gTone.key === 'bad' ? 'bad' : 'warn');
-  // Growth is measured only on outlets that have a baseline, so state that rather than
-  // letting the reader compare it against the all-outlet projection tile beside it.
-  byId('heroGrowthNote').textContent = growth === null ? 'No baseline' :
-    `${currency(projOnBase - lastTotal)} across the ${nf.format(withBase.length)} comparable outlets`;
-  byId('heroProjNote').textContent = withBase.length && withBase.length !== data.length
-    ? `Run-rate model · all ${nf.format(data.length)} outlets in view`
-    : 'Run-rate model';
-
-  const achEl = byId('heroAch');
-  achEl.textContent = ach === null ? '—' : percent(ach);
-  achEl.className = 'kpi-value' + (ach === null ? '' : ach >= 1 ? ' positive' : ' negative');
-  byId('heroAchNote').textContent = monthlyTarget ? `Target ${currency(monthlyTarget)}` : 'No monthly target';
-
   const growing = withBase.filter(r => num(r.momGrowth) !== null && num(r.momGrowth) > 0.02).length;
   const declining = withBase.filter(r => num(r.momGrowth) !== null && num(r.momGrowth) < -0.02).length;
-  byId('heroGrowing').textContent = nf.format(growing);
-  byId('heroDeclining').textContent = nf.format(declining);
-  byId('heroGrowingNote').textContent = withBase.length ? percent(growing / withBase.length) + ' of outlets with a base' : 'MoM above +2%';
-  byId('heroDecliningNote').textContent = withBase.length ? percent(declining / withBase.length) + ' of outlets with a base' : 'MoM below −2%';
-
+  const flat = withBase.length - growing - declining;
   const daily = dailyNetwork(data);
-  const observed = daily.filter(d => d.actual > 0);
+  const observed = daily.filter(d => d.observed && d.actual > 0);
   const runRate = observed.length ? observed.reduce((s, d) => s + d.actual, 0) / observed.length : null;
-  byId('heroRunRate').textContent = currency(runRate);
-  byId('heroRunRateNote').textContent = observed.length ? `${observed.length} trading days observed` : 'Average observed day';
+  const remaining = daily.filter(d => !d.observed).length;
+  const neededRate = remaining && monthlyTarget ? Math.max(0, monthlyTarget - actualToDate) / remaining : null;
+
+  const pjTone = performanceTone(ach), tdTone = performanceTone(achToDate), gTone = growthTone(growth);
+  const scaleMax = Math.max(1.2, Number.isFinite(ach) ? Math.min(ach, 2) : 0);
+  const fill = Number.isFinite(ach) ? Math.min(ach, scaleMax) / scaleMax * 100 : 0;
+  const toneKey = k => (k === 'watch' ? 'near' : k);
+
+  byId('heroKpis').innerHTML = [
+    `<article class="kpi kpi-hero">
+      <div class="hero-grid">
+        <div class="hero-figure">
+          <span class="kpi-label">Projected this month</span>
+          <div class="kpi-value" title="${escapeHtml(moneyExact(projTotal))}">${escapeHtml(currency(projTotal || null))}</div>
+          <div class="kpi-sub">${toneChip(pjTone)} ${escapeHtml(pct0(ach))} of monthly target</div>
+        </div>
+        <dl class="hero-rows">
+          <div class="hero-row"><dt>Month on month</dt><dd class="${growth === null ? '' : growth >= 0 ? 'pos' : 'neg'}">${escapeHtml(signedPercent(growth))}</dd></div>
+          <div class="hero-row"><dt>Change vs ${escapeHtml(lastMonthName)}</dt><dd>${growth === null ? '—' : escapeHtml((projOnBase - lastTotal >= 0 ? '+' : '') + currency(projOnBase - lastTotal))}</dd></div>
+          <div class="hero-row"><dt>Gap to target</dt><dd class="${projTotal - monthlyTarget >= 0 ? 'pos' : 'neg'}">${monthlyTarget ? escapeHtml((projTotal - monthlyTarget >= 0 ? '+' : '') + currency(projTotal - monthlyTarget)) : '—'}</dd></div>
+        </dl>
+      </div>
+      <div class="meter" role="img" aria-label="Projected ${pct0(ach)} of monthly target"><i class="${Number.isFinite(ach) ? toneKey(pjTone.key) : ''}" style="width:${fill.toFixed(1)}%"></i><b style="left:${(100 / scaleMax).toFixed(1)}%"></b></div>
+      <div class="meter-scale"><span>0</span><span>Monthly target</span></div>
+      <div class="kpi-foot"><span>Growth measured on the ${nf.format(withBase.length)} outlets with a ${escapeHtml(lastMonthName)} baseline</span></div>
+    </article>`,
+    `<article class="kpi" style="--accent-rule:var(--line)">
+      <span class="kpi-label">Total target</span>
+      <div class="kpi-value">${escapeHtml(currency(monthlyTarget || null))}</div>
+      <div class="kpi-sub">${escapeHtml(currency(targetToDate || null))} due till date</div>
+      <div class="kpi-foot"><span>Full-month target</span></div>
+    </article>`,
+    `<article class="kpi" style="--accent-rule:var(--series-2)">
+      <span class="kpi-label">Actual till date</span>
+      <div class="kpi-value">${escapeHtml(currency(actualToDate || null))}</div>
+      <div class="kpi-sub">${toneChip(tdTone, pct0(achToDate) + ' · ' + tdTone.label)}</div>
+      <div class="kpi-foot"><span>Gap ${escapeHtml(targetToDate ? (actualToDate - targetToDate >= 0 ? '+' : '') + currency(actualToDate - targetToDate) : '—')}</span></div>
+    </article>`,
+    `<article class="kpi" style="--accent-rule:var(--series-3)">
+      <span class="kpi-label">${escapeHtml(lastMonthName)} sales</span>
+      <div class="kpi-value">${escapeHtml(currency(lastTotal || null))}</div>
+      <div class="kpi-sub">${nf.format(withBase.length)} of ${nf.format(data.length)} outlets have a baseline</div>
+      <div class="kpi-foot"><span>Full-month actual</span></div>
+    </article>`,
+    `<article class="kpi" style="--accent-rule:var(--series-4)">
+      <span class="kpi-label">Daily run rate</span>
+      <div class="kpi-value">${escapeHtml(currency(runRate))}</div>
+      <div class="kpi-sub">${neededRate === null ? 'Month complete' : `${escapeHtml(currency(neededRate))} a day needed to hit target`}</div>
+      <div class="kpi-foot"><span>${nf.format(observed.length)} trading days observed · ${nf.format(remaining)} left</span></div>
+    </article>`
+  ].join('');
+
+  const share = n => (withBase.length ? pct0(n / withBase.length) + ' of outlets with a baseline' : 'No baseline');
+  byId('momentumStrip').innerHTML = [
+    ['Growing', growing, 'good', 'MoM above +2%', share(growing)],
+    ['Flat', flat, 'near', 'MoM within ±2%', share(flat)],
+    ['Declining', declining, 'bad', 'MoM below −2%', share(declining)],
+    ['No baseline', data.length - withBase.length, 'neutral', `Not in ${lastMonthName} file`, 'Left out of growth']
+  ].map(([label, n, key, rule, note]) =>
+    `<div><span>${chip(key, label)} <span class="muted" style="display:inline;font-weight:500">${escapeHtml(rule)}</span></span><strong>${nf.format(n)}</strong><small>${escapeHtml(note)}</small></div>`).join('');
 
   return { lastTotal, projOnBase, projTotal, monthlyTarget, targetToDate, actualToDate, achToDate,
     growth, ach, growing, declining, withBase, daily, runRate };
@@ -359,78 +410,63 @@ function dailyNetwork(data) {
 /* ---------- callouts ---------- */
 function renderCallouts(data, hero) {
   const host = byId('callouts');
-  host.replaceChildren();
   const cards = [];
   const money = v => currency(v);
-
   const rhoGroups = groupBy(data, 'regionalHead').filter(g => g.lastMonth > 0);
   const byDelta = rhoGroups.slice().sort((a, b) => (b.delta || 0) - (a.delta || 0));
-  if (byDelta.length) {
+  const netGain = hero.projOnBase - hero.lastTotal;
+  if (byDelta.length && (byDelta[0].delta || 0) > 0) {
     const top = byDelta[0];
-    cards.push({ tone: 'good', glyph: '▲', title: `${top.name} is adding the most`,
-      body: `${money(top.delta)} more than ${lastMonthName} across ${nf.format(top.outlets)} outlets — ${signedPercent(top.mom)} growth. That is ${hero.projOnBase - hero.lastTotal > 0 ? percent(Math.min(1, (top.delta || 0) / (hero.projOnBase - hero.lastTotal))) : '—'} of the network's net gain.` });
-    const worst = byDelta[byDelta.length - 1];
-    if (worst && worst !== top && (worst.delta || 0) < 0) {
-      cards.push({ tone: 'bad', glyph: '▼', title: `${worst.name} is the biggest drag`,
-        body: `${money(worst.delta)} against ${lastMonthName} (${signedPercent(worst.mom)}) across ${nf.format(worst.outlets)} outlets. Projected achievement is ${percent(worst.projectedAchievement)}.` });
-    }
+    cards.push({ tone: 'good', tag: 'Leading', title: `${top.name} is adding the most`,
+      body: `${money(top.delta)} more than ${lastMonthName} across ${nf.format(top.outlets)} outlets, ${signedPercent(top.mom)} growth.` + (netGain > 0 ? ` That is ${pct0(Math.min(1, top.delta / netGain))} of the network's net gain.` : '') });
   }
-
+  if (byDelta.length > 1) {
+    const worst = byDelta[byDelta.length - 1];
+    if ((worst.delta || 0) < 0) cards.push({ tone: 'bad', tag: 'Drag', title: `${worst.name} is the biggest drag`,
+      body: `${money(worst.delta)} against ${lastMonthName} (${signedPercent(worst.mom)}) across ${nf.format(worst.outlets)} outlets. Projected achievement is ${pct0(worst.projectedAchievement)}.` });
+  }
   const risk = data.filter(r => num(r.momGrowth) !== null && num(r.momGrowth) < -0.02 && num(r.projectedAchievement) !== null && num(r.projectedAchievement) < 1);
   if (risk.length) {
     const riskValue = risk.reduce((s, r) => s + Math.abs(num(r.projectedGap) || 0), 0);
-    cards.push({ tone: 'bad', glyph: '⚠', title: `${nf.format(risk.length)} outlets are declining and behind target`,
-      body: `Together they are ${money(riskValue)} short of their monthly target. They are the fastest place to recover the gap.` });
+    cards.push({ tone: 'bad', tag: 'At risk', title: `${nf.format(risk.length)} outlets are declining and behind target`,
+      body: `Together they are ${money(riskValue)} short of their monthly target, the quickest place to recover the gap. Switch the quadrant to Outlet to find them.` });
   }
-
   const ranked = data.slice().sort((a, b) => (num(b.projectedSales) || 0) - (num(a.projectedSales) || 0));
   if (ranked.length > 10 && hero.projTotal) {
     const topN = Math.max(1, Math.round(ranked.length * 0.1));
     const share = ranked.slice(0, topN).reduce((s, r) => s + (num(r.projectedSales) || 0), 0) / hero.projTotal;
-    cards.push({ tone: 'info', glyph: '◆', title: `Top 10% of outlets carry ${percent(share)} of projected sales`,
-      body: `${nf.format(topN)} of ${nf.format(ranked.length)} outlets. ${share > 0.35 ? 'Revenue is concentrated — protect these first.' : 'Revenue is well spread across the estate.'}` });
+    cards.push({ tone: 'info', tag: 'Concentration', title: `The top 10% of outlets carry ${pct0(share)} of projected sales`,
+      body: `${nf.format(topN)} of ${nf.format(ranked.length)} outlets. ${share > 0.35 ? 'Revenue is concentrated, so protect these first.' : 'Revenue is well spread across the estate.'}` });
   }
-
-  const weekday = weekdayTotals(hero.daily);
-  const best = weekday.filter(w => w.days > 0).sort((a, b) => b.avg - a.avg)[0];
-  if (best) {
-    const overall = weekday.filter(w => w.days > 0);
-    const meanAvg = overall.reduce((s, w) => s + w.avg, 0) / overall.length;
-    cards.push({ tone: 'info', glyph: '◷', title: `${best.name} is the strongest trading day`,
-      body: `${money(best.avg)} on an average ${best.name}, ${signedPercent(best.avg / meanAvg - 1)} versus the average day. ${nf.format(best.days)} such days observed this month.` });
+  const weekday = weekdayTotals(hero.daily).filter(w => w.days > 0);
+  if (weekday.length > 1) {
+    const best = weekday.slice().sort((a, b) => b.avg - a.avg)[0];
+    const meanAvg = weekday.reduce((s, w) => s + w.avg, 0) / weekday.length;
+    cards.push({ tone: 'info', tag: 'Rhythm', title: `${best.name} is the strongest trading day`,
+      body: `${money(best.avg)} on an average ${best.name}, ${signedPercent(best.avg / meanAvg - 1)} against the average weekday. ${nf.format(best.days)} such day${best.days === 1 ? '' : 's'} observed this month.` });
   }
-
   const thisYear = reportMonth().slice(0, 4);
   const newCohort = data.filter(r => (salesDateValue(r.launchDate) || '').slice(0, 4) === thisYear);
   if (newCohort.length && hero.projTotal) {
     const cohortProj = newCohort.reduce((s, r) => s + (num(r.projectedSales) || 0), 0);
-    cards.push({ tone: 'watch', glyph: '✦', title: `${nf.format(newCohort.length)} outlets opened in ${thisYear} contribute ${percent(cohortProj / hero.projTotal)}`,
-      body: `${money(cohortProj)} projected from the newest cohort — ${percent(newCohort.length / data.length)} of outlets producing ${percent(cohortProj / hero.projTotal)} of sales.` });
+    cards.push({ tone: 'near', tag: 'New outlets', title: `${nf.format(newCohort.length)} outlets opened in ${thisYear} bring ${pct0(cohortProj / hero.projTotal)} of sales`,
+      body: `${money(cohortProj)} projected from the newest cohort: ${pct0(newCohort.length / data.length)} of outlets.` });
   }
-
-  const gapToTarget = (hero.monthlyTarget || 0) - (hero.projTotal || 0);
   if (hero.monthlyTarget) {
+    const gapToTarget = hero.monthlyTarget - hero.projTotal;
     const remaining = hero.daily.filter(d => !d.observed).length;
     cards.push({
-      tone: gapToTarget > 0 ? 'watch' : 'good',
-      glyph: gapToTarget > 0 ? '↗' : '✓',
+      tone: gapToTarget > 0 ? 'near' : 'good', tag: 'Target',
       title: gapToTarget > 0 ? `${money(gapToTarget)} short of the monthly target` : `Tracking ${money(-gapToTarget)} ahead of target`,
       body: remaining > 0
-        ? `${nf.format(remaining)} trading days left. ${gapToTarget > 0 ? `Closing it needs an extra ${money(gapToTarget / remaining)} per remaining day.` : 'Current run rate is enough to finish ahead.'}`
+        ? `${nf.format(remaining)} days left. ${gapToTarget > 0 ? `Closing it needs an extra ${money(gapToTarget / remaining)} a day on top of the projection.` : 'The current run rate is enough to finish ahead.'}`
         : 'The month is complete on the selected date.'
     });
   }
-
-  if (!cards.length) {
-    host.innerHTML = '<p class="empty">Not enough data in the current selection to generate a read-out.</p>';
-    return;
-  }
-  cards.forEach(c => {
-    const el = document.createElement('div');
-    el.className = 'callout ' + c.tone;
-    el.innerHTML = `<span class="callout-glyph" aria-hidden="true">${c.glyph}</span><div><h4>${escapeHtml(c.title)}</h4><p>${escapeHtml(c.body)}</p></div>`;
-    host.append(el);
-  });
+  const sev = { good: 'var(--good)', bad: 'var(--bad)', near: 'var(--warn)', info: 'var(--info)' };
+  host.innerHTML = cards.length
+    ? cards.map(c => `<div class="finding" style="--sev:${sev[c.tone]}"><div class="finding-bar"></div><div><h3>${chip(c.tone, c.tag)} <span>${escapeHtml(c.title)}</span></h3><p>${escapeHtml(c.body)}</p></div></div>`).join('')
+    : '<div class="empty-state">Not enough data in the current selection to write a read-out.</div>';
 }
 
 function weekdayTotals(daily) {
@@ -448,7 +484,7 @@ function weekdayTotals(daily) {
 
 /* ---------- momentum quadrant ---------- */
 function renderQuadrant(data) {
-  document.querySelectorAll('[data-quad-level]').forEach(b => b.classList.toggle('active', b.dataset.quadLevel === quadLevel));
+  setPressed('data-quad-level', quadLevel);
   const P = palette();
   const svg = byId('quadrantChart');
   svg.replaceChildren(svgEl('title', { id: svg.id === 'quadrantChart' ? 'quadrantTitle' : 'trajectoryTitle' }));
@@ -459,8 +495,8 @@ function renderQuadrant(data) {
     .map(g => ({ ...g, quad: quadrantOf(g.mom, g.projectedAchievement) }));
   quadExport = groups.slice();
 
-  const W = Math.max(280, Math.round(svg.parentElement.clientWidth)), H = W < 520 ? 350 : 440, pad = { t: 24, r: 22, b: 48, l: 60 };
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.style.height = H + 'px';
+  const W = Math.max(280, Math.round(svg.parentElement.clientWidth)), H = W < 520 ? 340 : 420, pad = { t: 24, r: 22, b: 48, l: 60 };
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', W); svg.setAttribute('height', H); svg.style.height = H + 'px';
   const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
 
   if (!groups.length) {
@@ -496,10 +532,10 @@ function renderQuadrant(data) {
   ];
   washes.forEach(w => {
     if (w.w <= 0 || w.h <= 0) return;
-    svg.append(svgEl('rect', { x: w.x, y: w.y, width: w.w, height: w.h, fill: P.get(w.q.colorVar), opacity: 0.045 }));
+    svg.append(svgEl('rect', { x: w.x, y: w.y, width: w.w, height: w.h, fill: P.get(w.q.colorVar), opacity: 0.06 }));
     const label = svgEl('text', {
       x: w.x + w.w / 2, y: w.y + w.h / 2, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
-      fill: P['--viz-muted'], 'font-size': W < 520 ? 12 : 22, 'font-weight': 650, opacity: 0.5, 'pointer-events': 'none'
+      fill: P['--viz-muted'], 'font-size': W < 520 ? 12 : 16, 'font-weight': 620, opacity: 0.55, 'pointer-events': 'none'
     });
     label.textContent = `${w.q.glyph} ${w.q.label}`;
     svg.append(label);
@@ -517,10 +553,10 @@ function renderQuadrant(data) {
   };
   [-gSpan, -gSpan / 2, 0, gSpan / 2, gSpan].forEach(v => tick(x(v), pad.t + plotH + 18, signedPercent(v, 0), 'middle'));
   [1 - aSpan, 1 - aSpan / 2, 1, 1 + aSpan / 2, 1 + aSpan].forEach(v => tick(pad.l - 10, y(v) + 4, percent(v), 'end'));
-  const xTitle = svgEl('text', { x: pad.l + plotW / 2, y: H - 8, 'text-anchor': 'middle', fill: P['--viz-muted'], 'font-size': 11.5, 'font-weight': 800 });
+  const xTitle = svgEl('text', { x: pad.l + plotW / 2, y: H - 8, 'text-anchor': 'middle', fill: P['--viz-muted'], 'font-size': 11.5, 'font-weight': 600 });
   xTitle.textContent = `Month-on-month growth vs ${lastMonthName} →`;
   svg.append(xTitle);
-  const yTitle = svgEl('text', { x: 16, y: pad.t + plotH / 2, 'text-anchor': 'middle', fill: P['--viz-muted'], 'font-size': 11.5, 'font-weight': 800, transform: `rotate(-90 16 ${pad.t + plotH / 2})` });
+  const yTitle = svgEl('text', { x: 16, y: pad.t + plotH / 2, 'text-anchor': 'middle', fill: P['--viz-muted'], 'font-size': 11.5, 'font-weight': 600, transform: `rotate(-90 16 ${pad.t + plotH / 2})` });
   yTitle.textContent = 'Projected target achievement →';
   svg.append(yTitle);
 
@@ -544,7 +580,8 @@ function renderQuadrant(data) {
     node.setAttribute('stroke', P['--viz-surface']);
     node.setAttribute('stroke-width', 2);
     node.setAttribute('data-quad-dot', g.quad.key);
-    node.style.cursor = 'pointer';
+    node.style.cursor = isOutlet ? 'pointer' : 'default';
+    if (isOutlet && g.code) node.addEventListener('click', () => { hideTooltip(); openProfile(g.code); });
     attachTooltip(node, () => `<strong>${escapeHtml(g.name)}</strong>
       <dl>
         <dt>${escapeHtml(g.quad.glyph + ' ' + g.quad.label)}</dt><dd>${escapeHtml(g.sub || '')}</dd>
@@ -562,8 +599,8 @@ function renderQuadrant(data) {
       const ly = py - r - 6;
       const collides = placed.some(p => Math.abs(p.x - px) < 78 && Math.abs(p.y - ly) < 15);
       if (!collides) {
-        const halo = svgEl('text', { x: px, y: ly, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 850, fill: P['--viz-surface'], stroke: P['--viz-surface'], 'stroke-width': 4, 'stroke-linejoin': 'round', 'pointer-events': 'none' });
-        const lab = svgEl('text', { x: px, y: ly, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 850, fill: P['--viz-ink'], 'pointer-events': 'none' });
+        const halo = svgEl('text', { x: px, y: ly, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 650, fill: P['--viz-surface'], stroke: P['--viz-surface'], 'stroke-width': 4, 'stroke-linejoin': 'round', 'pointer-events': 'none' });
+        const lab = svgEl('text', { x: px, y: ly, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 650, fill: P['--viz-ink'], 'pointer-events': 'none' });
         halo.textContent = short; lab.textContent = short;
         svg.append(halo, lab);
         placed.push({ x: px, y: ly });
@@ -577,11 +614,11 @@ function renderQuadrant(data) {
   Object.values(QUADRANTS).forEach(q => {
     const members = groups.filter(g => g.quad.key === q.key);
     const value = members.reduce((s, g) => s + g.projected, 0);
-    const chip = document.createElement('div');
-    chip.className = 'quadrant-chip';
-    chip.innerHTML = `<span class="q-glyph" style="color:${P.get(q.colorVar)}" aria-hidden="true">${q.glyph}</span>
+    const item = document.createElement('div');
+    item.className = 'quad-item';
+    item.innerHTML = `<span class="glyph" style="color:${P.get(q.colorVar)}" aria-hidden="true">${q.glyph}</span>
       <div><strong>${q.label} · ${nf.format(members.length)}</strong><small>${q.note} · ${currency(value)} projected</small></div>`;
-    legend.append(chip);
+    legend.append(item);
   });
   byId('quadrantNote').textContent = `${nf.format(groups.length)} ${levelLabel(quadLevel).toLowerCase()} group${groups.length === 1 ? '' : 's'} plotted; marker area is projected month-end sales. `
     + `Axes are scaled to the bulk of the data (±${signedPercent(gSpan, 0).replace('+', '')} growth, ${percent(1 - aSpan)}–${percent(1 + aSpan)} achievement)`
@@ -590,141 +627,74 @@ function renderQuadrant(data) {
 
 /* ---------- movers ---------- */
 function renderMovers(data) {
-  document.querySelectorAll('[data-mover-level]').forEach(b => b.classList.toggle('active', b.dataset.moverLevel === moverLevel));
-  document.querySelectorAll('[data-mover-dir]').forEach(b => b.classList.toggle('active', b.dataset.moverDir === moverDir));
+  setPressed('data-mover-level', moverLevel);
+  setPressed('data-mover-dir', moverDir);
   const groups = groupBy(data, moverLevel).filter(g => g.lastMonth > 0 && g.delta !== null);
   const sorted = groups.sort((a, b) => moverDir === 'gain' ? b.delta - a.delta : a.delta - b.delta);
   const shown = sorted.slice(0, moverLevel === 'outlet' ? 40 : 30);
   moverExport = sorted.slice();
-
-  byId('moversSubtitle').textContent = `${moverDir === 'gain' ? 'Largest gains' : 'Largest declines'} in projected monthly sales versus ${lastMonthName}`;
+  byId('moversSubtitle').textContent = `${moverDir === 'gain' ? 'Largest gains' : 'Largest declines'} in projected monthly sales against ${lastMonthName}.`;
   const host = byId('moversList');
-  host.replaceChildren();
-  if (!shown.length) { host.innerHTML = '<p class="empty">No group in view has a last-month baseline.</p>'; return; }
-
+  if (!shown.length) { host.innerHTML = '<div class="empty-state">No group in view has a last-month baseline.</div>'; byId('moversNote').textContent = ''; return; }
   const maxAbs = Math.max(...shown.map(g => Math.abs(g.delta)), 1);
-  // When every bar shares a sign, anchor to the edge and use the full width; only mix signs need a centre axis.
   const mixed = shown.some(g => g.delta >= 0) && shown.some(g => g.delta < 0);
   const origin = mixed ? 50 : (shown[0].delta >= 0 ? 0 : 100);
   const scale = mixed ? 50 : 100;
-  shown.forEach(g => {
-    const row = document.createElement('div');
-    row.className = 'mover-row';
-    const name = document.createElement('div');
-    name.className = 'mover-name';
-    name.title = g.name;
-    name.innerHTML = `${escapeHtml(g.name)}<small>${escapeHtml(g.sub || '')}</small>`;
-
-    const bar = document.createElement('div');
-    bar.className = 'mover-bar';
+  host.innerHTML = shown.map(g => {
     const width = Math.max(0.8, (Math.abs(g.delta) / maxAbs) * scale);
-    const fill = document.createElement('i');
-    fill.style.background = g.delta >= 0 ? 'var(--div-pos)' : 'var(--div-neg)';
-    fill.style.left = (g.delta >= 0 ? origin : origin - width) + '%';
-    fill.style.width = width + '%';
-    bar.append(fill);
-    if (mixed) { const axis = document.createElement('span'); axis.className = 'axis'; axis.style.left = origin + '%'; bar.append(axis); }
-
-    const abs = document.createElement('div');
-    abs.className = 'mover-abs';
-    abs.textContent = (g.delta >= 0 ? '+' : '−') + compactNumber(Math.abs(g.delta));
-
-    const pct = document.createElement('div');
-    pct.className = 'mover-value ' + (g.delta >= 0 ? 'positive' : 'negative');
-    pct.textContent = signedPercent(g.mom);
-
-    row.append(name, bar, abs, pct);
-    window.OND.attachTooltip(row, () => `<strong>${escapeHtml(g.name)}</strong>
-      <dl><dt>${escapeHtml(lastMonthName)}</dt><dd>${currency(g.lastMonth)}</dd>
-      <dt>Projected</dt><dd>${currency(g.projected)}</dd>
-      <dt>Change</dt><dd>${currency(g.delta)}</dd>
-      <dt>Growth</dt><dd>${signedPercent(g.mom)}</dd>
-      <dt>Projected ach.</dt><dd>${percent(g.projectedAchievement)}</dd></dl>`);
-    host.append(row);
-  });
-
-  // Never let a truncated list read as "this is everything".
+    const left = g.delta >= 0 ? origin : origin - width;
+    const clickable = moverLevel === 'outlet' && g.code;
+    return `<div class="rank-row four"${clickable ? ` role="button" tabindex="0" data-outlet="${escapeHtml(g.code)}" style="cursor:pointer"` : ''}>
+      <div class="rank-name"><strong title="${escapeHtml(g.name)}">${escapeHtml(g.name)}</strong><span>${escapeHtml(g.sub || '')}</span></div>
+      <div class="bar-track"><i class="bar-fill" style="left:${left.toFixed(1)}%;width:${width.toFixed(1)}%;background:var(${g.delta >= 0 ? '--good' : '--bad'})"></i>${mixed ? `<span class="bar-axis" style="left:${origin}%"></span>` : ''}</div>
+      <div class="rank-value" title="${escapeHtml(moneyExact(g.delta))}">${g.delta >= 0 ? '+' : '−'}${escapeHtml(compactNumber(Math.abs(g.delta)))}</div>
+      <div class="rank-value ${g.delta >= 0 ? 'pos' : 'neg'}">${escapeHtml(signedPercent(g.mom))}</div>
+    </div>`;
+  }).join('');
   const hidden = sorted.length - shown.length;
-  byId('moversNote').textContent = "Bar length is the BDT change; the percentage is growth against the same group's last-month base."
-    + (hidden > 0 ? ` Showing the top ${nf.format(shown.length)} of ${nf.format(sorted.length)} — the CSV contains all ${nf.format(sorted.length)}.` : '');
+  byId('moversNote').textContent = "Bar length is the taka change; the percentage is growth on the same group's last-month base."
+    + (moverLevel === 'outlet' ? ' Click an outlet for its profile.' : '')
+    + (hidden > 0 ? ` Showing the top ${nf.format(shown.length)} of ${nf.format(sorted.length)}; the CSV has all of them.` : '');
 }
 
 /* ---------- heatmap ---------- */
 function renderHeatmap(daily) {
   const P = palette();
   const host = byId('heatmap');
-  host.replaceChildren();
   const observed = daily.filter(d => d.observed && d.actual > 0);
-  if (!observed.length) { host.innerHTML = '<p class="empty">No observed trading days in the current selection.</p>'; return; }
-
-  const first = daily[0];
-  const firstWeekday = (new Date(first.date + 'T00:00:00Z').getUTCDay() + 1) % 7;
+  if (!observed.length) { host.innerHTML = '<div class="empty-state">No trading days observed in the current selection.</div>'; byId('heatNote').textContent = ''; return; }
+  const firstWeekday = (new Date(daily[0].date + 'T00:00:00Z').getUTCDay() + 1) % 7;
   const weeks = [];
   daily.forEach(d => {
     const wd = (new Date(d.date + 'T00:00:00Z').getUTCDay() + 1) % 7;
-    const weekIndex = Math.floor((firstWeekday + d.day - 1) / 7);
-    if (!weeks[weekIndex]) weeks[weekIndex] = Array(7).fill(null);
-    weeks[weekIndex][wd] = d;
+    const wi = Math.floor((firstWeekday + d.day - 1) / 7);
+    if (!weeks[wi]) weeks[wi] = Array(7).fill(null);
+    weeks[wi][wd] = d;
   });
-
   const values = observed.map(d => d.actual);
   const min = Math.min(...values), max = Math.max(...values);
-  const stepFor = v => {
-    if (max === min) return 3;
-    return Math.min(6, Math.max(0, Math.round(((v - min) / (max - min)) * 6)));
-  };
-
-  const head = document.createElement('div');
-  head.className = 'heat-row';
-  const corner = document.createElement('div'); corner.className = 'heat-head'; corner.textContent = 'Week';
-  head.append(corner);
-  WEEKDAYS.forEach(w => { const c = document.createElement('div'); c.className = 'heat-head right'; c.textContent = w; head.append(c); });
-  host.append(head);
-
+  const stepFor = v => (max === min ? 3 : Math.min(6, Math.max(0, Math.round(((v - min) / (max - min)) * 6))));
   heatExport = [];
-  weeks.forEach((week, i) => {
-    if (!week) return;
-    const row = document.createElement('div');
-    row.className = 'heat-row';
-    const label = document.createElement('div');
-    label.className = 'heat-label';
+  const head = `<div class="heat-row"><div class="heat-head">Days</div>${WEEKDAYS.map(w => `<div class="heat-head">${w}</div>`).join('')}</div>`;
+  const body = weeks.filter(Boolean).map(week => {
     const days = week.filter(Boolean);
-    label.textContent = days.length ? `${days[0].day}–${days[days.length - 1].day}` : `W${i + 1}`;
-    row.append(label);
-    for (let wd = 0; wd < 7; wd++) {
-      const cell = document.createElement('div');
-      cell.className = 'heat-cell';
-      const d = week[wd];
-      if (!d) { cell.style.background = 'transparent'; cell.style.border = '2px dashed var(--line)'; cell.textContent = ''; row.append(cell); continue; }
-      if (!d.observed || d.actual <= 0) {
-        cell.classList.add('faint');
-        cell.style.background = 'var(--sunken-2)';
-        cell.textContent = '·';
-        cell.title = `${prettyDate(d.date)} — not yet traded`;
-      } else {
-        // Ink is chosen from the swatch's measured luminance so it stays legible
-        // at every ramp step, in both themes, without hard-coding a step threshold.
-        const fillHex = P.get(SEQ_STEPS[stepFor(d.actual)]);
-        cell.style.background = fillHex;
-        cell.style.color = readableInk(fillHex);
-        cell.textContent = compactNumber(d.actual);
-        const vsTarget = d.target ? d.actual / d.target : null;
-        window.OND.attachTooltip(cell, () => `<strong>${prettyDate(d.date)} · ${WEEKDAYS[wd]}</strong>
-          <dl><dt>Sales</dt><dd>${currency(d.actual)}</dd>
-          <dt>Target</dt><dd>${currency(d.target || null)}</dd>
-          <dt>Achievement</dt><dd>${vsTarget === null ? '—' : percent(vsTarget)}</dd></dl>`);
-      }
-      heatExport.push({ date: d.date, weekday: WEEKDAYS[wd], week: label.textContent, actual: d.actual, target: d.target, observed: d.observed });
-      row.append(cell);
-    }
-    host.append(row);
-  });
-
+    const label = `${days[0].day}–${days[days.length - 1].day}`;
+    const cells = week.map((d, wd) => {
+      if (!d) return '<div class="heat-cell outside" aria-hidden="true"></div>';
+      heatExport.push({ date: d.date, weekday: WEEKDAYS[wd], week: label, actual: d.actual, target: d.target, observed: d.observed });
+      if (!d.observed || d.actual <= 0) return `<div class="heat-cell pending" title="${escapeHtml(prettyDate(d.date))}: not traded yet · target ${escapeHtml(currency(d.target || null))}"></div>`;
+      const fillHex = P.get(SEQ_STEPS[stepFor(d.actual)]);
+      const vs = d.target ? d.actual / d.target : null;
+      return `<div class="heat-cell" data-heat="${d.date}" style="background:${fillHex};color:${readableInk(fillHex)}" title="${escapeHtml(prettyDate(d.date))} · ${escapeHtml(currency(d.actual))} · ${vs === null ? 'no target' : pct0(vs) + ' of target'}">${escapeHtml(compactNumber(d.actual))}</div>`;
+    }).join('');
+    return `<div class="heat-row"><div class="heat-label">${label}</div>${cells}</div>`;
+  }).join('');
+  host.innerHTML = head + body + `<div class="heat-scale"><span>${escapeHtml(currency(min))}</span><i>${SEQ_STEPS.map(s => `<b style="background:var(${s})"></b>`).join('')}</i><span>${escapeHtml(currency(max))}</span><span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px"><span class="heat-cell pending" style="width:18px;height:12px;display:inline-block"></span>Not traded yet</span></div>`;
   const wk = weekdayTotals(daily).filter(w => w.days);
   const best = wk.slice().sort((a, b) => b.avg - a.avg)[0];
   const worst = wk.slice().sort((a, b) => a.avg - b.avg)[0];
-  byId('heatNote').textContent = best && worst
-    ? `Darkest cell ${currency(max)} · lightest ${currency(min)}. Best average day ${best.name} (${currency(best.avg)}), weakest ${worst.name} (${currency(worst.avg)}).`
+  byId('heatNote').textContent = best && worst && best !== worst
+    ? `Best average day ${best.name} (${currency(best.avg)}), weakest ${worst.name} (${currency(worst.avg)}).`
     : '';
   byId('heatSubtitle').textContent = `Network sales by week and weekday · ${monthLabel(reportMonth())}`;
 }
@@ -737,8 +707,8 @@ function renderTrajectory(data, daily) {
   svg.querySelector('title').textContent = 'Cumulative sales versus target across the month';
   if (!daily.length) return;
 
-  const W = Math.max(280, Math.round(svg.parentElement.clientWidth - 36)), H = Math.max(240, Math.min(340, W * (W < 520 ? .75 : .34))), pad = { t: 18, r: W < 520 ? 68 : 96, b: 40, l: 54 };
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.style.height = H + 'px';
+  const W = Math.max(280, Math.round(svg.parentElement.clientWidth)), H = Math.max(240, Math.min(340, W * (W < 520 ? .75 : .34))), pad = { t: 18, r: W < 520 ? 68 : 96, b: 40, l: 54 };
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', W); svg.setAttribute('height', H); svg.style.height = H + 'px';
   const plotW = W - pad.l - pad.r, plotH = H - pad.t - pad.b;
 
   let ca = 0, ct = 0;
@@ -786,11 +756,11 @@ function renderTrajectory(data, daily) {
   const path = pts => pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.day).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
   svg.append(svgEl('path', { d: path(series.map(s => ({ day: s.day, value: s.cumTarget }))), fill: 'none', stroke: P['--viz-axis'], 'stroke-width': 2, 'stroke-dasharray': '6 5', 'stroke-linecap': 'round' }));
   const actualPts = series.filter(s => s.cumActual !== null).map(s => ({ day: s.day, value: s.cumActual }));
-  if (actualPts.length) svg.append(svgEl('path', { d: path(actualPts), fill: 'none', stroke: P['--series-1'], 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  if (actualPts.length) svg.append(svgEl('path', { d: path(actualPts), fill: 'none', stroke: P['--series-2'], 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
   if (projSeries.length && lastObserved) {
     svg.append(svgEl('path', {
       d: path([{ day: lastObserved.day, value: observedTotal }].concat(projSeries)),
-      fill: 'none', stroke: P['--series-1'], 'stroke-width': 2.5, 'stroke-dasharray': '7 6', 'stroke-linecap': 'round', opacity: 0.75
+      fill: 'none', stroke: P['--series-2'], 'stroke-width': 2.5, 'stroke-dasharray': '7 6', 'stroke-linecap': 'round', opacity: 0.75
     }));
   }
 
@@ -804,11 +774,11 @@ function renderTrajectory(data, daily) {
     g.append(t1, t2); svg.append(g);
   };
   endLabel(ct, 'Target', P['--viz-muted'], ct >= projectedTotal ? -8 : 12);
-  endLabel(projectedTotal, 'Projected', P['--series-1'], ct >= projectedTotal ? 14 : -6);
+  endLabel(projectedTotal, 'Projected', P['--series-2'], ct >= projectedTotal ? 14 : -6);
 
   if (lastObserved) {
     svg.append(svgEl('line', { x1: x(lastObserved.day), y1: pad.t, x2: x(lastObserved.day), y2: pad.t + plotH, stroke: P['--viz-axis'], 'stroke-width': 1, 'stroke-dasharray': '3 4' }));
-    svg.append(svgEl('circle', { cx: x(lastObserved.day), cy: y(observedTotal), r: 4.5, fill: P['--series-1'], stroke: P['--viz-surface'], 'stroke-width': 2 }));
+    svg.append(svgEl('circle', { cx: x(lastObserved.day), cy: y(observedTotal), r: 4.5, fill: P['--series-2'], stroke: P['--viz-surface'], 'stroke-width': 2 }));
   }
 
   // crosshair hover layer
@@ -866,54 +836,34 @@ const LEAGUE_COLUMNS = [
   { key: 'mom', label: 'MoM growth', type: 'signedPct', signed: true }
 ];
 function renderLeague(data) {
-  document.querySelectorAll('[data-league-level]').forEach(b => b.classList.toggle('active', b.dataset.leagueLevel === leagueLevel));
+  setPressed('data-league-level', leagueLevel);
   byId('leagueTitle').textContent = levelLabel(leagueLevel) + ' league table';
   const groups = groupBy(data, leagueLevel);
-  const k = leagueSort.key;
-  groups.sort((a, b) => {
-    if (k === 'name') return String(a.name).localeCompare(String(b.name), undefined, { numeric: true }) * leagueSort.direction;
-    return ((num(a[k]) || 0) - (num(b[k]) || 0)) * leagueSort.direction;
-  });
+  const s = leagueSort;
+  groups.sort((a, b) => s.key === 'name'
+    ? String(a.name).localeCompare(String(b.name), undefined, { numeric: true }) * s.direction
+    : compareNullable(num(a[s.key]), num(b[s.key]), s.direction, String(a.name).localeCompare(String(b.name))));
   leagueExport = groups.slice();
-
-  const head = byId('leagueHead'); head.replaceChildren();
-  const hr = document.createElement('tr');
-  LEAGUE_COLUMNS.forEach(c => {
-    const th = document.createElement('th');
-    th.textContent = typeof c.label === 'function' ? c.label() : c.label;
-    const act = document.createElement('span');
-    act.className = 'header-actions';
-    act.textContent = leagueSort.key === c.key ? (leagueSort.direction === 1 ? '▲' : '▼') : '↕';
-    th.append(act);
-    th.onclick = () => {
-      if (leagueSort.key === c.key) leagueSort.direction *= -1;
-      else { leagueSort.key = c.key; leagueSort.direction = c.key === 'name' ? 1 : -1; }
-      renderLeague(data);
-    };
-    hr.append(th);
-  });
-  head.append(hr);
-
-  const body = byId('leagueBody'); body.replaceChildren();
-  if (!groups.length) {
-    const tr = document.createElement('tr'), td = document.createElement('td');
-    td.colSpan = LEAGUE_COLUMNS.length; td.textContent = 'No groups match the current filters.';
-    tr.append(td); body.append(tr);
-  } else groups.forEach(g => {
-    const tr = document.createElement('tr');
-    LEAGUE_COLUMNS.forEach(c => {
-      const td = document.createElement('td');
+  const A = 'data-league-sort';
+  const labelOf = c => (typeof c.label === 'function' ? c.label() : c.label);
+  const host = byId('leagueTable');
+  if (!groups.length) { host.innerHTML = '<div class="empty-state">No groups match the current filters.</div>'; byId('leagueCount').textContent = ''; return; }
+  host.innerHTML = `<table class="data"><thead><tr>${LEAGUE_COLUMNS.map(c => sortHeader(c.key === 'name' ? levelLabel(leagueLevel) : labelOf(c), c.key, s, A, c.key !== 'name')).join('')}</tr></thead>
+    <tbody>${groups.map((g, i) => `<tr>${LEAGUE_COLUMNS.map(c => {
       const v = g[c.key];
-      if (c.type === 'textCol') { td.textContent = g.name; td.title = g.sub || ''; }
-      else if (c.type === 'int') { td.className = 'number'; td.textContent = nf.format(v || 0); }
-      else if (c.type === 'money') { td.className = 'number'; td.textContent = currency(v); }
-      else if (c.type === 'pct') { td.className = 'number'; td.textContent = v === null || v === undefined ? '—' : percent(v); }
-      else { td.className = 'number'; td.textContent = signedPercent(v); }
-      if (c.signed && num(v) !== null) td.classList.add(num(v) >= 0 ? 'positive' : 'negative');
-      tr.append(td);
-    });
-    body.append(tr);
-  });
+      if (c.type === 'textCol') return `<td><span class="cell-primary" title="${escapeHtml(g.sub || '')}"><span class="muted">${i + 1}</span>&nbsp; ${escapeHtml(g.name)}</span></td>`;
+      if (c.type === 'int') return `<td class="numeric">${nf.format(v || 0)}</td>`;
+      if (c.type === 'money') {
+        const n = num(v), cls = c.signed && n !== null ? (n >= 0 ? 'pos' : 'neg') : '';
+        return `<td class="numeric ${cls}" title="${escapeHtml(moneyExact(v))}">${escapeHtml(c.signed && n > 0 ? '+' + currency(v) : currency(v))}</td>`;
+      }
+      if (c.type === 'pct') {
+        const n = num(v);
+        return `<td class="numeric">${n === null ? '<span class="muted">—</span>' : `<span class="rate-pair"><strong>${pct0(n)}</strong>${toneChip(performanceTone(n))}</span>`}</td>`;
+      }
+      const n = num(v);
+      return `<td class="numeric ${n === null ? 'muted' : n >= 0 ? 'pos' : 'neg'}">${escapeHtml(signedPercent(v))}</td>`;
+    }).join('')}</tr>`).join('')}</tbody></table>`;
   byId('leagueCount').textContent = `${nf.format(groups.length)} ${levelLabel(leagueLevel).toLowerCase()} group${groups.length === 1 ? '' : 's'}`;
 }
 
@@ -982,18 +932,18 @@ function reportGroups(data) {
   data.forEach(r => {
     const name = display(r[key]);
     if (name === '—') return;
-    const g = m.get(name) || { name, rows: [], outlets: 0, target: 0, actual: 0, monthlyTarget: 0, projected: 0, lastMonth: 0, hasBase: 0 };
+    const g = m.get(name) || { name, rows: [], outlets: 0, target: 0, actual: 0, monthlyTarget: 0, projected: 0, lastMonth: 0, projOnBase: 0, hasBase: 0 };
     g.rows.push(r);
     g.outlets += 1;
     g.target += num(r.targetToDate) || 0;
     g.actual += num(r.salesToDate) || 0;
     g.monthlyTarget += num(r.monthlyTarget) || 0;
     g.projected += num(r.projectedSales) || 0;
-    if (num(r.lastMonthSales) !== null) { g.lastMonth += num(r.lastMonthSales); g.hasBase += 1; }
+    if (num(r.lastMonthSales) !== null) { g.lastMonth += num(r.lastMonthSales); g.projOnBase += num(r.projectedSales) || 0; g.hasBase += 1; }
     m.set(name, g);
   });
   return [...m.values()]
-    .map(g => ({ ...withDerived(g), quad: quadrantOf(g.lastMonth ? g.projected / g.lastMonth - 1 : 0, g.monthlyTarget ? g.projected / g.monthlyTarget : 0) }))
+    .map(g => withDerived(g)).map(g => ({ ...g, quad: quadrantOf(g.mom === null ? 0 : g.mom, g.projectedAchievement === null ? 0 : g.projectedAchievement) }))
     .sort((a, b) => b.projected - a.projected);
 }
 
@@ -1361,11 +1311,17 @@ function downloadLeagueCsv() {
 }
 
 /* ---------- render ---------- */
+function setPressed(attr, value) {
+  document.querySelectorAll(`[${attr}]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute(attr) === value)));
+}
 function render() {
   filterPanel.refresh();
   const data = selectedRows();
-  const active = FILTERS.filter(f => filters[f.key]?.length).map(f => f.label + ': ' + filters[f.key].join(', '));
-  byId('filterSummary').textContent = `${nf.format(data.length)} outlets in view` + (active.length ? ' · ' + active.join(' · ') : ' · All regions');
+  const activeCount = FILTERS.reduce((n, f) => n + (filters[f.key]?.length ? 1 : 0), 0);
+  byId('scopeLine').textContent = `${nf.format(data.length)} of ${nf.format(rows.length)} outlets · ${monthLabel(reportMonth())} · `
+    + (activeCount ? `${activeCount} filter${activeCount === 1 ? '' : 's'} active` : 'all regions');
+  byId('footOutlets').textContent = nf.format(data.length);
+  byId('footNetwork').textContent = nf.format(rows.length);
   const hero = renderHero(data);
   renderCallouts(data, hero);
   renderQuadrant(data);
@@ -1373,7 +1329,12 @@ function render() {
   renderHeatmap(hero.daily);
   renderTrajectory(data, hero.daily);
   renderLeague(data);
-  byId('heroSubtitle').textContent = `${nf.format(data.length)} outlets in view · month-end projection measured against ${lastMonthName} actual.`;
+  byId('heroSubtitle').textContent = `Month-end projection for ${nf.format(data.length)} outlets, measured against ${lastMonthName} actual and the monthly target.`;
+}
+function openProfile(code) {
+  const pool = selectedRows();
+  const row = pool.find(r => r.code === code) || rows.find(r => r.code === code);
+  O.openOutletProfile(row, { pool, lastMonthName, through: byId('salesThroughDate').value, reportMonth: reportMonth() });
 }
 
 /* ---------- init ---------- */
@@ -1383,41 +1344,51 @@ async function init() {
     const payload = await loadDashboardData();
     baseRows = payload.rows; source = payload.source; meta = payload.meta;
     lastMonthName = text(source.lastMonth?.monthLabel) || text(source.previousMonthLabel) || 'Last month';
-    const rm = text(source.reportMonth) || text(meta.reportMonth);
-    byId('monthChip').textContent = rm ? monthLabel(rm) : 'Snapshot';
-
     const dates = allSalesDates(baseRows), actual = actualSalesDates(baseRows);
     const input = byId('salesThroughDate');
     if (dates.length) {
       const min = dates[0], max = actual.length ? actual.at(-1) : dates.at(-1);
       input.min = min; input.max = max; input.value = max;
     } else input.disabled = true;
-
-    byId('snapshotText').textContent = `${nf.format(baseRows.length)} outlets${input.value ? ' · sales through ' + prettyDate(input.value) : ''}${OND.driveSyncNote(source)}`;
+    byId('freshDate').textContent = input.value ? prettyDate(input.value) : '—';
+    byId('snapshotText').textContent = `Sales through ${input.value ? prettyDate(input.value) : '—'}`
+      + (source.lastMonth?.matchedOutlets ? ` · ${lastMonthName} baseline on ${nf.format(source.lastMonth.matchedOutlets)} outlets` : '')
+      + O.driveSyncNote(source) + '.';
     rows = refreshSalesCalculations(baseRows, input.value, '');
     render();
   } catch (err) {
-    setMessage('error', err.message || 'Dashboard data could not be loaded.');
+    setMessage('error', (err.message || 'Dashboard data could not be loaded.') + ' The page needs data/dashboard-data.json from the published site.');
     console.error(err);
   }
 }
 
 initTheme();
-enableScrollChain();
+O.initShell();
 filterPanel = createFilterPanel('filterFields', {
   availableKey, onChange: render, getFilters: () => filters, getRows: () => rows, fieldValue
 });
 byId('salesThroughDate').addEventListener('change', e => {
   if (!e.target.value) return;
   rows = refreshSalesCalculations(baseRows, e.target.value, '');
+  byId('freshDate').textContent = prettyDate(e.target.value);
   render();
 });
 document.querySelectorAll('[data-quad-level]').forEach(b => b.addEventListener('click', () => { quadLevel = b.dataset.quadLevel; renderQuadrant(selectedRows()); }));
 document.querySelectorAll('[data-mover-level]').forEach(b => b.addEventListener('click', () => { moverLevel = b.dataset.moverLevel; renderMovers(selectedRows()); }));
 document.querySelectorAll('[data-mover-dir]').forEach(b => b.addEventListener('click', () => { moverDir = b.dataset.moverDir; renderMovers(selectedRows()); }));
 document.querySelectorAll('[data-league-level]').forEach(b => b.addEventListener('click', () => { leagueLevel = b.dataset.leagueLevel; renderLeague(selectedRows()); }));
-byId('clearFilters').addEventListener('click', () => { filters = emptyFilters(); saveFilters(filters); filterPanel.closeAll(); render(); });
-
+byId('leagueTable').addEventListener('click', e => {
+  const s = e.target.closest('[data-league-sort]');
+  if (!s) return;
+  const k = s.dataset.leagueSort;
+  leagueSort = leagueSort.key === k ? { key: k, direction: -leagueSort.direction } : { key: k, direction: k === 'name' ? 1 : -1 };
+  renderLeague(selectedRows());
+});
+byId('moversList').addEventListener('click', e => { const r = e.target.closest('[data-outlet]'); if (r) openProfile(r.dataset.outlet); });
+byId('moversList').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('[data-outlet]')) openProfile(e.target.dataset.outlet); });
+function clearAll() { filters = emptyFilters(); saveFilters(filters); filterPanel.closeAll(); render(); }
+byId('clearFilters').addEventListener('click', clearAll);
+byId('railReset').addEventListener('click', clearAll);
 byId('downloadQuadrantCsv').addEventListener('click', downloadQuadrantCsv);
 byId('downloadMoversCsv').addEventListener('click', downloadMoversCsv);
 byId('downloadHeatCsv').addEventListener('click', downloadHeatCsv);
@@ -1428,9 +1399,17 @@ byId('reportClose').addEventListener('click', closeReport);
 byId('reportPrint').addEventListener('click', () => window.print());
 byId('reportPng').addEventListener('click', downloadReportPng);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && byId('reportOverlay').classList.contains('is-open')) closeReport(); });
-// Charts resolve tokens to concrete colours, so a theme switch needs a repaint.
+// SVG charts are drawn at measured width and resolve tokens to hex, so they
+// redraw on a real width change or a theme switch.
 let chartWidth = 0;
-new ResizeObserver(() => { const width = byId('quadrantChart').parentElement.clientWidth; if (rows.length && Math.abs(width-chartWidth)>=12) { chartWidth=width; const data=selectedRows(); renderQuadrant(data); renderTrajectory(data, renderHero(data).daily); } }).observe(byId('quadrantChart').parentElement);
+new ResizeObserver(() => {
+  const width = byId('quadrantChart').parentElement.clientWidth;
+  if (!rows.length || Math.abs(width - chartWidth) < 12) return;
+  chartWidth = width;
+  const data = selectedRows();
+  renderQuadrant(data);
+  renderTrajectory(data, dailyNetwork(data));
+}).observe(byId('view'));
 document.addEventListener('ond:themechange', () => { if (rows.length) render(); });
 init();
 })();

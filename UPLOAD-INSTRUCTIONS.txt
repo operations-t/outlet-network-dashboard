@@ -22,7 +22,8 @@ ONE-TIME SETUP (new repository)
 1. Create a PUBLIC repository on GitHub.
 2. Add file -> Upload files -> drag in everything from this ZIP:
      index.html, insights.html, README.md, UPLOAD-INSTRUCTIONS.txt,
-     assets/ (core.js, theme.css, vendor/), scripts/ (2 files)
+     assets/ (core.js, profile.js, shwapno.css, report.css, vendor/),
+     scripts/ (2 files)
    Commit changes.
 3. The ".github" and ".gitignore" items are hidden and are often skipped by
    drag-and-drop. Create them by hand:

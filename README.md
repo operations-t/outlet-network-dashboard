@@ -9,7 +9,7 @@ Drive folder and the site refreshes itself within 30 minutes.
 | Network overview | `index.html` | Targets, actuals, month-end projection, last-month comparison, portfolio mix, outlet directory |
 | Growth &amp; Momentum | `insights.html` | Momentum quadrant, top movers, trading-day heatmap, month trajectory, leadership league table |
 
-Both pages share `assets/theme.css` and `assets/core.js`, so the theme choice, the sidebar
+Both pages share `assets/shwapno.css`, `assets/core.js` and `assets/profile.js`, so the theme choice, the sidebar
 filters and every calculation stay identical between them.
 
 ## One-time repository setup
@@ -164,14 +164,35 @@ report is never mistaken for the whole network.
 Node-24-compatible GitHub Pages actions: `checkout@v7`, `setup-python@v7`, `configure-pages@v6`,
 `upload-pages-artifact@v5`, `deploy-pages@v5`.
 
-## Shwapno Dashboard System rebuild (16 September 2026)
+## Design — Shwapno Dashboard System (rebuilt 16 September 2026)
 
-Both pages use the additive `assets/redesign.css` layer and the responsive shell in
-`assets/redesign.js`. The existing snapshot, refresh schedule, sales calculations,
-projection model, drill-down and export handlers are retained.
+Both pages were rebuilt from scratch on the house design system rather than patched with an
+override layer. The calculations, Drive refresh, projection model, CSV exports and the printed
+report are unchanged.
 
-- Persistent navigation rail and mobile filter drawer with keyboard focus management.
-- Dark default with remembered light option; teal, amber and clay status colours.
-- Linked filter counts, selection chips, selected values retained at zero matching outlets.
-- Readable chart labels, responsive charts, square table rows and sticky first columns.
-- Data options remain available from the overview toolbar.
+| File | Contains |
+|---|---|
+| `assets/shwapno.css` | Tokens for both themes, shell, rail, filters, panels, KPI cards, chips, tables, charts, drawer |
+| `assets/core.js` | Data loading, projection maths, formatting, linked filters, CSV, shell and drawer helpers |
+| `assets/profile.js` | Outlet profile drawer shared by both pages |
+| `assets/report.css` | Fixed paper palette for the Regional Head report (theme-independent on purpose) |
+
+- **Layout.** Left rail (pages, sales period, filters, counts) and a sticky top bar
+  (scope line, sales-through date, blue Clear filters, theme). Below 1080px the rail becomes a
+  drawer opened from the Filters button.
+- **Colour.** Dark is the default; light is a full second theme. Brand red is only the logo,
+  the active page marker and the focus ring. Status uses teal (on target / growing), amber
+  (watch / flat) and clay (below target / declining), and every status chip prints its label.
+- **Money.** `৳` with K / Lac / Cr everywhere; hover a figure for the exact taka.
+- **Filters.** Every filter is multi-select and linked: each list only shows values still
+  reachable under the other selections, with an outlet count. Selections show as removable
+  pills and carry between the two pages.
+- **Drill-down.** Blue numbers (glance strip, rank bars, donut legends, openings) and league
+  table rows list the matching outlets in the register. Any register row, outlet mover or
+  outlet dot in the quadrant opens the outlet profile: till-date and projected achievement,
+  daily sales against daily target, ranks within its regional head, zone and format, contacts
+  and outlet details.
+- **Register.** Key or all columns, search, sort (missing values last), 50 rows a page; the
+  CSV always carries every column for the rows in view.
+- **Growth.** Month-on-month growth is measured only on outlets that have a last-month
+  baseline, at every level, so newly opened outlets never read as growth.

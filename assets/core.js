@@ -16,7 +16,7 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', next);
   try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* private mode */ }
   document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
-    btn.textContent = next === 'dark' ? 'Light theme' : 'Dark theme';
+    btn.textContent = next === 'dark' ? '☀ Light' : '☾ Dark';
     btn.title = next === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
     btn.setAttribute('aria-pressed', String(next === 'dark'));
   });
@@ -48,14 +48,27 @@ const nf = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 function compactNumber(value) {
   const n = num(value);
   if (n === null) return '—';
-  const a = Math.abs(n), sign = n < 0 ? '-' : '';
+  const a = Math.abs(n), sign = n < 0 ? '\u2212' : '';
   const f = (x, d = 1) => Number(x.toFixed(d)).toString();
   if (a >= 1e7) return sign + f(a / 1e7, 2) + ' Cr';
   if (a >= 1e5) return sign + f(a / 1e5, 2) + ' Lac';
   if (a >= 1e4) return sign + f(a / 1e3, 1) + ' K';
   return nf.format(Math.round(n));
 }
-const currency = v => (num(v) === null ? '—' : 'BDT ' + compactNumber(v));
+// House money format: ৳ with K / Lac / Cr and a true minus sign.
+function currency(v) {
+  const n = num(v);
+  if (n === null) return '—';
+  const s = n < 0 ? '\u2212' : '', a = Math.abs(n);
+  if (a >= 1e7) return s + '৳' + (a / 1e7).toFixed(2) + ' Cr';
+  if (a >= 1e5) return s + '৳' + (a / 1e5).toFixed(2) + ' Lac';
+  if (a >= 1e3) return s + '৳' + (a / 1e3).toFixed(1) + ' K';
+  return s + '৳' + a.toFixed(0);
+}
+function moneyExact(v) {
+  const n = num(v);
+  return n === null ? '—' : (n < 0 ? '\u2212' : '') + '৳' + nf.format(Math.abs(Math.round(n)));
+}
 const display = v => text(v) || '—';
 function percent(v, digits = 0) {
   const n = num(v);
@@ -65,7 +78,7 @@ function signedPercent(v, digits = 1) {
   const n = num(v);
   if (n === null || !Number.isFinite(n)) return '—';
   const p = n * 100;
-  return (p > 0 ? '+' : '') + p.toFixed(digits) + '%';
+  return (p > 0 ? '+' : p < 0 ? '\u2212' : '') + Math.abs(p).toFixed(digits) + '%';
 }
 function prettyDate(v) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(text(v))) return text(v) || '—';
@@ -290,74 +303,156 @@ function stamp() {
   return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
 }
 
-/* ---------- combobox filter UI ---------- */
+/* ---------- linked multi-select filters (house .ms control) ----------
+   Every field is a multi-select. The options for one field are the values
+   still reachable under all the other active selections, each with its
+   outlet count. Nothing selected means "all". A value already chosen stays
+   listed (count 0) so it can always be undone. Panels open inline so they
+   never cover the next filter in the rail. */
 function createFilterPanel(hostId, { availableKey, onChange, getFilters, getRows, fieldValue }) {
   const host = byId(hostId);
   if (!host) return { refresh() {}, closeAll() {} };
-  const comboQueries = new Map(), optionsByKey = new Map(), countsByKey = new Map();
+  const optionsByKey = new Map();
+  const SEARCH_MIN = 8;
+
   host.replaceChildren();
   FILTERS.forEach(f => {
-    const wrap = document.createElement('div');wrap.className='field';wrap.dataset.field=f.key;
-    const lab=document.createElement('label');lab.htmlFor=f.key;lab.textContent=f.label;
-    const count=document.createElement('span');count.className='filter-count';count.id=f.key+'Count';lab.append(count);
-    const combo=document.createElement('div');combo.className='combobox';
-    const input=document.createElement('input');input.id=f.key;input.type='search';input.autocomplete='off';
-    input.setAttribute('role','combobox');input.setAttribute('aria-expanded','false');input.setAttribute('aria-controls',f.key+'List');
-    input.placeholder='All '+f.label;
-    const toggle=document.createElement('button');toggle.type='button';toggle.className='combo-toggle';toggle.textContent='⌄';
-    toggle.setAttribute('aria-label','Toggle '+f.label+' options');
-    const menu=document.createElement('div');menu.className='combo-menu';menu.id=f.key+'Options';menu.hidden=true;
-    combo.append(input,toggle,menu);wrap.append(lab,combo);host.append(wrap);
-    input.addEventListener('focus',()=>openCombo(f.key));
-    input.addEventListener('input',e=>{comboQueries.set(f.key,text(e.target.value));renderComboMenu(f.key);menu.hidden=false;input.setAttribute('aria-expanded','true');});
-    input.addEventListener('keydown',e=>{if(e.key==='Escape')closeCombo(f.key);if(e.key==='ArrowDown'){e.preventDefault();menu.querySelector('[role="option"]')?.focus();}});
-    toggle.addEventListener('click',()=>menu.hidden?openCombo(f.key):closeCombo(f.key));
+    const root = document.createElement('div');
+    root.className = 'ms';
+    root.dataset.field = f.key;
+    root.innerHTML = `
+      <div class="ms-label"><span id="${f.key}Label">${escapeHtml(f.label)}</span><b data-badge hidden></b></div>
+      <button class="ms-button" type="button" aria-expanded="false" aria-haspopup="listbox" aria-labelledby="${f.key}Label ${f.key}Value">
+        <span class="ms-value" id="${f.key}Value">All</span><span class="ms-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="ms-panel" hidden>
+        <input class="ms-search" type="search" placeholder="Search ${escapeHtml(f.label.toLowerCase())}…" autocomplete="off" aria-label="Search ${escapeHtml(f.label)}" hidden>
+        <div class="ms-tools"><button type="button" data-all>Select all</button><button type="button" data-clear>Clear</button><span class="ms-count" data-count></span></div>
+        <div class="ms-options" role="listbox" aria-multiselectable="true" aria-label="${escapeHtml(f.label)}"></div>
+      </div>`;
+    host.append(root);
   });
-  function commit(){saveFilters(getFilters());onChange();}
-  function closeCombo(key){const m=byId(key+'Options');if(!m)return;m.hidden=true;comboQueries.set(key,'');updateComboInput(key);byId(key).setAttribute('aria-expanded','false');}
-  function closeAll(){FILTERS.forEach(f=>closeCombo(f.key));}
-  function openCombo(key){if(!availableKey(key))return;FILTERS.forEach(f=>{if(f.key!==key)closeCombo(f.key);});comboQueries.set(key,'');byId(key).value='';renderComboMenu(key);byId(key+'Options').hidden=false;byId(key).setAttribute('aria-expanded','true');}
-  function updateComboInput(key){const selected=getFilters()[key]||[],input=byId(key),menu=byId(key+'Options');if(document.activeElement===input && menu && !menu.hidden)return;input.value=selected.length===1?selected[0]:selected.length?selected.length+' selected':'';input.placeholder='All '+FILTERS.find(f=>f.key===key).label;}
-  function renderComboMenu(key){
-    const menu=byId(key+'Options');if(!menu)return;
-    const scroll=menu.scrollTop,selected=getFilters()[key]||[],q=text(comboQueries.get(key)).toLowerCase();
-    const values=(optionsByKey.get(key)||[]).filter(v=>v.toLowerCase().includes(q));
-    const focusValue=menu.contains(document.activeElement)?document.activeElement.dataset.value:null;
-    menu.replaceChildren();
-    const toolbar=document.createElement('div');toolbar.className='combo-tools';
-    for(const [label,action] of [['Select all',()=>{getFilters()[key]=[...new Set([...selected,...values])];commit();}],['Clear',()=>{getFilters()[key]=[];commit();}]]){
-      const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=action;toolbar.append(b);
+
+  const allLabel = f => 'All ' + f.label.replace(/^Outlet code \+ name$/, 'outlets').toLowerCase();
+  function commit() { saveFilters(getFilters()); onChange(); }
+  function closeAll(except = null) {
+    host.querySelectorAll('.ms').forEach(root => {
+      if (root === except) return;
+      root.querySelector('.ms-panel').hidden = true;
+      root.querySelector('.ms-button').setAttribute('aria-expanded', 'false');
+    });
+  }
+  function renderOptions(root) {
+    const key = root.dataset.field;
+    const chosen = getFilters()[key] || [];
+    const search = root.querySelector('.ms-search');
+    const q = text(search.value).toLowerCase();
+    const box = root.querySelector('.ms-options');
+    const top = box.scrollTop;
+    const entries = (optionsByKey.get(key) || []).filter(([v]) => !q || v.toLowerCase().includes(q));
+    // Long lists (outlet names) are capped for speed; search narrows them.
+    const shown = entries.slice(0, 400);
+    box.innerHTML = shown.length
+      ? shown.map(([v, c]) => `<button class="ms-option" type="button" role="option" aria-selected="${chosen.includes(v)}" data-value="${escapeHtml(v)}">
+          <span class="ms-box" aria-hidden="true">✓</span><span class="ms-name" title="${escapeHtml(v)}">${escapeHtml(v)}</span><span class="ms-num">${nf.format(c)}</span></button>`).join('')
+        + (entries.length > shown.length ? `<div class="ms-empty">${nf.format(entries.length - shown.length)} more — type to narrow the list.</div>` : '')
+      : '<div class="ms-empty">Nothing matches the other filters.</div>';
+    box.scrollTop = top;
+    root.querySelector('[data-count]').textContent = chosen.length ? `${nf.format(chosen.length)} selected` : `${nf.format(entries.length)} available`;
+  }
+  function renderButton(root) {
+    const key = root.dataset.field, f = FILTERS.find(x => x.key === key);
+    const chosen = getFilters()[key] || [];
+    root.querySelector('.ms-value').textContent = !chosen.length ? allLabel(f) : chosen.length === 1 ? chosen[0] : `${chosen.length} selected`;
+    const badge = root.querySelector('[data-badge]');
+    badge.hidden = !chosen.length;
+    badge.textContent = chosen.length ? String(chosen.length) : '';
+    root.classList.toggle('is-active', chosen.length > 0);
+  }
+  function refresh() {
+    const filters = getFilters(), rows = getRows();
+    FILTERS.forEach(f => {
+      const root = host.querySelector(`[data-field="${f.key}"]`);
+      const available = availableKey(f.key);
+      root.hidden = !available;
+      if (!available) { filters[f.key] = []; return; }
+      const counts = new Map();
+      rows.forEach(r => {
+        if (!FILTERS.every(o => o.key === f.key || !availableKey(o.key) || filterMatches(fieldValue(r, o.key), filters[o.key]))) return;
+        const v = display(fieldValue(r, f.key));
+        if (v !== '—') counts.set(v, (counts.get(v) || 0) + 1);
+      });
+      (filters[f.key] || []).forEach(v => { if (!counts.has(v)) counts.set(v, 0); });
+      optionsByKey.set(f.key, [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })));
+      root.querySelector('.ms-search').hidden = counts.size < SEARCH_MIN;
+      renderButton(root);
+      if (!root.querySelector('.ms-panel').hidden) renderOptions(root);
+    });
+    const pills = byId('activeFilters');
+    if (pills) {
+      const html = [];
+      FILTERS.forEach(f => (filters[f.key] || []).forEach(v => {
+        html.push(`<span class="filter-pill"><b>${escapeHtml(f.label)}</b> ${escapeHtml(v)}<button type="button" data-remove-key="${f.key}" data-remove-value="${escapeHtml(v)}" aria-label="Remove ${escapeHtml(f.label)} ${escapeHtml(v)}">×</button></span>`);
+      }));
+      pills.innerHTML = html.join('');
+      pills.hidden = !html.length;
     }
-    const note=document.createElement('small');note.textContent=selected.length+' selected / '+values.length+' available';toolbar.append(note);menu.append(toolbar);
-    const list=document.createElement('div');list.id=key+'List';list.setAttribute('role','listbox');list.setAttribute('aria-label',FILTERS.find(f=>f.key===key).label);list.setAttribute('aria-multiselectable','true');menu.append(list);
-    values.forEach(value=>{
-      const current=selected.includes(value),b=document.createElement('button');b.type='button';b.className='combo-option'+(current?' is-current':'');b.dataset.value=value;b.setAttribute('role','option');b.setAttribute('aria-selected',String(current));
-      const c=document.createElement('span');c.className='combo-check';c.textContent=current?'✓':'';c.setAttribute('aria-hidden','true');
-      const label=document.createElement('span');label.className='combo-option-name';label.textContent=value;
-      const count=document.createElement('span');count.className='combo-count';count.textContent=countsByKey.get(key)?.get(value)||0;
-      b.append(c,label,count);b.onclick=()=>{const f=getFilters();f[key]=f[key].includes(value)?f[key].filter(x=>x!==value):f[key].concat(value);commit();};
-      b.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCombo(key);byId(key).focus();closeCombo(key);}if(['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();(e.key==='ArrowDown'?b.nextElementSibling:b.previousElementSibling)?.focus();}});list.append(b);
-    });
-    if(!values.length){const n=document.createElement('p');n.className='combo-empty';n.textContent='No matching values';list.append(n);}
-    if(focusValue)[...list.children].find(n=>n.dataset.value===focusValue)?.focus({preventScroll:true});
-    menu.scrollTop=scroll;
   }
-  function refresh(){
-    const filters=getFilters(),rows=getRows();
-    FILTERS.forEach(f=>{
-      const wrap=host.querySelector(`[data-field="${f.key}"]`),available=availableKey(f.key);wrap.hidden=!available;
-      if(!available){filters[f.key]=[];return;}
-      const related=rows.filter(r=>FILTERS.every(other=>other.key===f.key||!availableKey(other.key)||filterMatches(fieldValue(r,other.key),filters[other.key])));
-      const counts=new Map();related.forEach(r=>{const v=display(fieldValue(r,f.key));if(v!=='—')counts.set(v,(counts.get(v)||0)+1);});
-      countsByKey.set(f.key,counts);
-      optionsByKey.set(f.key,[...new Set([...counts.keys(),...(filters[f.key]||[])])].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})));
-      byId(f.key+'Count').textContent=filters[f.key].length||'';wrap.classList.toggle('is-selected',!!filters[f.key].length);
-      updateComboInput(f.key);renderComboMenu(f.key);
-    });
-    const pills=byId('activeFilters');if(pills){pills.replaceChildren();FILTERS.forEach(f=>(filters[f.key]||[]).forEach(value=>{const b=document.createElement('button');b.type='button';b.className='filter-pill';b.textContent=f.label+': '+value+' ×';b.setAttribute('aria-label','Remove '+f.label+' filter '+value);b.onclick=()=>{filters[f.key]=filters[f.key].filter(v=>v!==value);commit();};pills.append(b);}));}
-  }
-  document.addEventListener('pointerdown',e=>{if(!e.target.closest('.combobox'))closeAll();},{capture:true});
-  return {refresh,closeAll};
+
+  host.addEventListener('click', e => {
+    const root = e.target.closest('.ms');
+    if (!root) return;
+    const key = root.dataset.field, filters = getFilters();
+    if (e.target.closest('.ms-button')) {
+      const panel = root.querySelector('.ms-panel'), open = panel.hidden;
+      closeAll(root);
+      panel.hidden = !open;
+      root.querySelector('.ms-button').setAttribute('aria-expanded', String(open));
+      if (open) {
+        const s = root.querySelector('.ms-search');
+        s.value = '';
+        renderOptions(root);
+        if (!s.hidden) s.focus();
+      }
+      return;
+    }
+    const opt = e.target.closest('.ms-option');
+    if (opt) {
+      const v = opt.dataset.value;
+      filters[key] = filters[key].includes(v) ? filters[key].filter(x => x !== v) : filters[key].concat(v);
+      commit();
+      return;
+    }
+    if (e.target.closest('[data-all]')) {
+      const q = text(root.querySelector('.ms-search').value).toLowerCase();
+      const vals = (optionsByKey.get(key) || []).map(([v]) => v).filter(v => !q || v.toLowerCase().includes(q));
+      filters[key] = [...new Set(filters[key].concat(vals))];
+      commit();
+      return;
+    }
+    if (e.target.closest('[data-clear]')) { filters[key] = []; commit(); }
+  });
+  host.addEventListener('input', e => {
+    if (e.target.classList.contains('ms-search')) renderOptions(e.target.closest('.ms'));
+  });
+  host.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const root = e.target.closest('.ms');
+    if (!root || root.querySelector('.ms-panel').hidden) return;
+    closeAll();
+    root.querySelector('.ms-button').focus();
+  });
+  const pills = byId('activeFilters');
+  if (pills) pills.addEventListener('click', e => {
+    const b = e.target.closest('[data-remove-key]');
+    if (!b) return;
+    const filters = getFilters();
+    filters[b.dataset.removeKey] = filters[b.dataset.removeKey].filter(v => v !== b.dataset.removeValue);
+    commit();
+  });
+  // Capture phase: ticking an option re-renders the list and detaches the clicked node.
+  document.addEventListener('click', e => { if (!e.target.closest('#' + hostId)) closeAll(); }, true);
+  return { refresh, closeAll };
 }
 
 function filterMatches(value, selected) {
@@ -474,6 +569,7 @@ function palette(extra = []) {
     '--series-1', '--series-2', '--series-3', '--accent', '--track',
     '--status-good', '--status-warning', '--status-serious', '--status-critical',
     '--div-pos', '--div-neg', '--div-mid',
+    '--ink', '--ink-2', '--ink-3', '--line', '--grid', '--surface', '--surface-2', '--series-4', '--series-5', '--good', '--warn', '--bad', '--info',
     '--seq-100', '--seq-200', '--seq-300', '--seq-400', '--seq-500', '--seq-600', '--seq-700'].concat(extra);
   const out = {};
   names.forEach(n => { out[n] = cssVar(n) || '#888888'; });
@@ -481,7 +577,88 @@ function palette(extra = []) {
   return out;
 }
 
+/* ---------- status chips ----------
+   performanceTone / growthTone keep their original keys (the printed report
+   relies on them); chips map them onto the house tiers and always print the label. */
+function chip(key, label) {
+  return `<span class="chip chip-${key}">${escapeHtml(label)}</span>`;
+}
+function toneChip(tone, label) {
+  const neutral = /^No (target|base)$/.test(tone.label);
+  const key = neutral ? 'neutral' : tone.key === 'watch' ? 'near' : tone.key;
+  return chip(key, label || tone.label);
+}
+
+/* ---------- sortable header + comparator ---------- */
+function sortHeader(label, key, sort, attr, numeric) {
+  const active = sort.key === key;
+  const arrow = sort.direction === 1 ? ' ↑' : ' ↓';
+  return `<th class="${numeric ? 'numeric' : ''}" scope="col"><button class="sort-button${active ? ' is-active' : ''}" type="button" ${attr}="${escapeHtml(key)}" data-arrow="${arrow}">${escapeHtml(label)}</button></th>`;
+}
+// Missing numbers sort last in both directions; ties fall back to the label.
+function compareNullable(av, bv, direction, tie) {
+  const am = !Number.isFinite(av), bm = !Number.isFinite(bv);
+  if (am && bm) return tie;
+  if (am) return 1;
+  if (bm) return -1;
+  return av === bv ? tie : (av - bv) * direction;
+}
+function pager(total, page, size) {
+  const pages = Math.max(1, Math.ceil(total / size));
+  const current = Math.min(Math.max(1, page), pages);
+  const start = (current - 1) * size;
+  return { pages, page: current, start, end: Math.min(total, start + size) };
+}
+
+/* ---------- shell: rail drawer on narrow screens ---------- */
+function initShell() {
+  const rail = byId('rail'), toggle = byId('railToggle'), close = byId('railClose'), scrim = byId('railScrim');
+  if (!rail || !toggle) return;
+  const setOpen = open => {
+    rail.classList.toggle('is-open', open);
+    scrim.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    if (open) (close || rail).focus();
+  };
+  toggle.addEventListener('click', () => setOpen(!rail.classList.contains('is-open')));
+  if (close) close.addEventListener('click', () => { setOpen(false); toggle.focus(); });
+  scrim.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && rail.classList.contains('is-open') && !rail.querySelector('.ms-panel:not([hidden])')) { setOpen(false); toggle.focus(); }
+  });
+  matchMedia('(min-width: 1081px)').addEventListener('change', e => { if (e.matches) setOpen(false); });
+  document.querySelectorAll('.menu').forEach(menu => document.addEventListener('click', e => { if (!menu.contains(e.target)) menu.open = false; }));
+}
+
+/* ---------- right-hand profile drawer ---------- */
+let drawerReturn = null;
+function openDrawer(title, subtitle, html) {
+  drawerReturn = document.activeElement;
+  byId('drawerTitle').textContent = title;
+  byId('drawerSubtitle').textContent = subtitle || '';
+  byId('drawerBody').innerHTML = html;
+  byId('drawerBody').scrollTop = 0;
+  byId('drawerScrim').hidden = false;
+  byId('drawer').hidden = false;
+  document.body.style.overflow = 'hidden';
+  byId('drawerClose').focus();
+}
+function closeDrawer() {
+  if (byId('drawer').hidden) return;
+  byId('drawerScrim').hidden = true;
+  byId('drawer').hidden = true;
+  document.body.style.overflow = '';
+  if (drawerReturn && drawerReturn.isConnected) drawerReturn.focus();
+}
+document.addEventListener('DOMContentLoaded', () => {
+  if (!byId('drawer')) return;
+  byId('drawerClose').addEventListener('click', closeDrawer);
+  byId('drawerScrim').addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+});
+
 window.OND = {
+  moneyExact, toneChip, chip, initShell, openDrawer, closeDrawer, sortHeader, compareNullable, pager,
   byId, text, num, nf, compactNumber, currency, display, percent, signedPercent,
   prettyDate, monthLabel, headerKey, escapeHtml, salesDateValue,
   FIELD_DEFINITIONS, FILTERS, PERCENT_FIELDS, MONEY_FIELDS, NUMERIC_FIELDS,

@@ -1,0 +1,139 @@
+/* =========================================================================
+   Summary report (A4 landscape). Deliberately theme-independent: it uses a
+   fixed print palette so the PDF/PNG looks identical whether the dashboard
+   was in light or dark mode when it was generated.
+   ========================================================================= */
+#reportOverlay {
+  position: fixed; inset: 0; z-index: 500; display: none;
+  overflow: auto; padding: 18px 12px 40px; background: #46545f;
+}
+#reportOverlay.is-open { display: block; }
+.report-toolbar {
+  position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center;
+  gap: 8px; width: 297mm; max-width: 100%; margin: 0 auto 16px; padding: 10px 12px;
+  border-radius: 10px; background: #0f2c3c; color: #eaf2f7; box-shadow: 0 8px 22px rgba(0,0,0,.3);
+}
+.report-toolbar h2 { margin: 0; font-size: 13px; letter-spacing: -.01em; }
+.report-toolbar p { margin: 2px 0 0; font-size: 10px; color: #9fb9c8; }
+.report-toolbar .spacer { flex: 1 1 auto; }
+.report-toolbar .btn { border-color: #38607a; background: #17475f; color: #eaf2f7; }
+.report-toolbar .btn:hover { border-color: #4f7f9c; background: #1d5978; }
+.report-toolbar .btn.primary { border-color: #2b8fbb; background: #2b8fbb; color: #fff; }
+.report-toolbar .btn.primary:hover { background: #2380aa; }
+.report-busy { font-size: 10px; color: #9fb9c8; }
+
+.report-sheet { display: grid; gap: 16px; justify-items: center; }
+.report-page {
+  position: relative; box-sizing: border-box; width: 297mm; min-height: 210mm;
+  padding: 11mm 13mm 13mm; background: #ffffff; color: #0f1c26;
+  font: 10px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-shadow: 0 10px 26px rgba(0,0,0,.35); overflow: hidden;
+}
+.report-page * { box-sizing: border-box; }
+.rp-topline {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding-bottom: 5px; margin-bottom: 10px; border-bottom: 2px solid #0f2c3c;
+  font-size: 8.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #46617a;
+}
+.rp-topline b { color: #0f2c3c; letter-spacing: .12em; }
+
+.rp-hero { padding: 10mm 12mm; margin: -11mm -13mm 7mm; background: #0f2c3c; color: #eaf2f7; }
+.rp-hero .kicker { margin: 0 0 6px; font-size: 9.5px; font-weight: 850; letter-spacing: .22em; text-transform: uppercase; color: #6fc0e2; }
+.rp-hero h1 { margin: 0; font-size: 27px; line-height: 1.05; letter-spacing: -.03em; font-weight: 850; }
+.rp-hero h2 { margin: 5px 0 0; font-size: 14px; font-weight: 600; color: #b6cfdd; letter-spacing: -.01em; }
+.rp-hero .meta { display: flex; flex-wrap: wrap; gap: 5px 20px; margin: 10px 0 0; font-size: 9.5px; color: #9fb9c8; }
+.rp-hero .meta b { color: #eaf2f7; font-weight: 750; }
+
+.rp-section { margin-bottom: 6mm; }
+.rp-section:last-child { margin-bottom: 0; }
+.rp-h { margin: 0 0 6px; font-size: 9px; font-weight: 850; letter-spacing: .16em; text-transform: uppercase; color: #16607f; }
+.rp-h span { margin-left: 8px; font-weight: 600; letter-spacing: .02em; text-transform: none; color: #6b8395; }
+
+.rp-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.rp-tiles.six { grid-template-columns: repeat(6, 1fr); }
+.rp-tile { padding: 8px 9px; border: 1px solid #dde5ec; border-left: 3px solid #16607f; border-radius: 5px; background: #f8fbfd; }
+.rp-tile.pos { border-left-color: #0e7a52; }
+.rp-tile.neg { border-left-color: #b52e4c; }
+.rp-tile.neu { border-left-color: #a06a00; }
+.rp-tile dt { margin: 0; font-size: 7.5px; font-weight: 850; letter-spacing: .07em; text-transform: uppercase; color: #6b8395; }
+.rp-tile dd { margin: 4px 0 0; font-size: 15px; font-weight: 850; letter-spacing: -.03em; color: #0f1c26; }
+.rp-tile dd.pos { color: #0e7a52; }
+.rp-tile dd.neg { color: #b52e4c; }
+.rp-tile small { display: block; margin-top: 2px; font-size: 7.5px; color: #6b8395; font-weight: 600; }
+
+.rp-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 8px; }
+.rp-rank {
+  display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; margin-right: 10px;
+  border-radius: 8px; background: #0f2c3c; color: #fff; font-size: 14px; font-weight: 850;
+}
+.rp-who { display: flex; align-items: center; min-width: 0; }
+.rp-who h1 { margin: 0; font-size: 21px; line-height: 1.1; letter-spacing: -.03em; font-weight: 850; }
+.rp-who p { margin: 3px 0 0; font-size: 9.5px; color: #6b8395; }
+.rp-chip {
+  flex: 0 0 auto; padding: 5px 10px; border: 1.5px solid currentColor; border-radius: 999px;
+  font-size: 9px; font-weight: 850; letter-spacing: .09em; text-transform: uppercase; white-space: nowrap;
+}
+.rp-chip.good { color: #0e7a52; }
+.rp-chip.watch { color: #a06a00; }
+.rp-chip.bad { color: #b52e4c; }
+.rp-chip.info { color: #16607f; }
+
+.rp-meters { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+.rp-meter-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: 9px; }
+.rp-meter-row .lbl { font-weight: 750; color: #46617a; }
+.rp-meter-row .val { font-weight: 850; font-variant-numeric: tabular-nums; }
+.rp-meter { grid-column: 1 / -1; position: relative; height: 7px; border-radius: 999px; background: #e6edf3; overflow: hidden; }
+.rp-meter i { position: absolute; left: 0; top: 0; bottom: 0; display: block; border-radius: 999px; background: #16607f; }
+.rp-meter i.pos { background: #0e7a52; }
+.rp-meter i.neg { background: #b52e4c; }
+.rp-meter i.neu { background: #a06a00; }
+.rp-meter .mark { position: absolute; top: -2px; bottom: -2px; width: 1.5px; background: #0f2c3c; }
+
+.rp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; }
+table.rp-table { width: 100%; border-collapse: collapse; font-size: 8.5px; color: #0f1c26; }
+table.rp-table td { color: #0f1c26; }
+table.rp-table td:first-child { color: #0f1c26; }
+table.rp-table th {
+  padding: 3px 6px; border-bottom: 1.5px solid #0f2c3c; text-align: right;
+  font-size: 7.5px; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; color: #46617a; white-space: nowrap;
+}
+table.rp-table th:first-child, table.rp-table td:first-child { text-align: left; }
+table.rp-table th.c, table.rp-table td.c { text-align: center; }
+table.rp-table td {
+  padding: 3.5px 6px; border-bottom: 1px solid #eaeff4; text-align: right;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+table.rp-table td:first-child { font-weight: 750; max-width: 62mm; overflow: hidden; text-overflow: ellipsis; }
+/* Only the name column may truncate — figures must always print in full. */
+.rp-cols table.rp-table { table-layout: auto; }
+.rp-cols table.rp-table th, .rp-cols table.rp-table td { padding-left: 4px; padding-right: 4px; }
+.rp-cols table.rp-table td:first-child { max-width: 36mm; }
+.rp-cols table.rp-table td:not(:first-child) { overflow: visible; text-overflow: clip; width: 1%; }
+table.rp-table tbody tr:nth-child(even) { background: #f7fafc; }
+table.rp-table td.pos { color: #0e7a52; font-weight: 800; }
+table.rp-table td.neg { color: #b52e4c; font-weight: 800; }
+table.rp-table td.warn { color: #a06a00; font-weight: 800; }
+table.rp-table td.muted { color: #6b8395; }
+.rp-pill { display: inline-block; padding: 1.5px 6px; border-radius: 999px; font-size: 7.5px; font-weight: 850; }
+.rp-pill.good { background: #e3f4ec; color: #0b6543; }
+.rp-pill.watch { background: #fbf0da; color: #7d5300; }
+.rp-pill.bad { background: #fbe6ec; color: #98263f; }
+
+.rp-foot {
+  position: absolute; left: 13mm; right: 13mm; bottom: 6mm;
+  display: flex; justify-content: space-between; gap: 12px;
+  padding-top: 4px; border-top: 1px solid #dde5ec; font-size: 7.5px; color: #7c93a4;
+}
+.rp-empty { padding: 10px; border: 1px dashed #dde5ec; border-radius: 5px; font-size: 8.5px; color: #6b8395; text-align: center; }
+
+@media print {
+  html, body { background: #fff !important; }
+  body > *:not(#reportOverlay) { display: none !important; }
+  #reportOverlay { position: static !important; display: block !important; padding: 0 !important; overflow: visible !important; background: #fff !important; }
+  .report-toolbar { display: none !important; }
+  .report-sheet { display: block; gap: 0; }
+  .report-page { width: 297mm; min-height: 0; height: 210mm; margin: 0; box-shadow: none; break-after: page; page-break-after: always; }
+  .report-page:last-child { break-after: auto; page-break-after: auto; }
+  @page { size: A4 landscape; margin: 0; }
+}
+
