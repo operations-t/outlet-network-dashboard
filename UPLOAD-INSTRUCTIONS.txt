@@ -1,0 +1,67 @@
+SHWAPNO OUTLET NETWORK DASHBOARD — SETUP & UPDATES
+==================================================
+
+WHERE THINGS LIVE
+-----------------
+Google Drive  -> ONLY the Excel files, placed directly in this folder
+                 https://drive.google.com/drive/folders/1mcEmZg6DV0xQzWImuNyZFPhfg4oc0YTB
+                 (share: "Anyone with the link – Viewer"; sub-folders are ignored)
+GitHub repo   -> everything else (pages, assets, scripts, workflow)
+
+Excel files needed in Drive (names may change monthly; keep ONE of each):
+  Outlet master        CODE, Outlet Name, Leader, Zonal, Format ...   required
+  Day-wise target      Outlet Code, Outlet Name, daily date columns   required
+  Day-wise sales       Outlet Code, Date, POS NSI                     required
+  Last month (SPLY)    sheet "SPLY-ALL (v5)" with Code, SALES THIS    optional
+
+Old files: move them into a sub-folder (e.g. "Old") or delete them.
+
+
+ONE-TIME SETUP (new repository)
+-------------------------------
+1. Create a PUBLIC repository on GitHub.
+2. Add file -> Upload files -> drag in everything from this ZIP:
+     index.html, insights.html, README.md, UPLOAD-INSTRUCTIONS.txt,
+     assets/ (core.js, theme.css, vendor/), scripts/ (2 files)
+   Commit changes.
+3. The ".github" and ".gitignore" items are hidden and are often skipped by
+   drag-and-drop. Create them by hand:
+     Add file -> Create new file
+       name:    .github/workflows/rebuild-and-deploy.yml
+       content: paste the whole file from this ZIP      -> Commit
+     Add file -> Create new file
+       name:    .gitignore
+       content: paste the whole file from this ZIP      -> Commit
+   The workflow name MUST end with ".yml".
+4. Settings -> Pages -> Build and deployment -> Source -> GitHub Actions.
+5. Put the 3–4 Excel files directly in the Drive folder.
+6. Actions -> "Sync Google Drive data and deploy Pages" -> Run workflow.
+   Wait for the green tick, then open the site.
+
+
+DAILY / MONTHLY UPDATES
+-----------------------
+Replace the Excel files in Drive. Nothing to do on GitHub.
+The site refreshes within 30 minutes (or run the workflow by hand).
+
+
+CODE UPDATES
+------------
+Upload the changed files to the GitHub repo. Never upload
+data/dashboard-data.json or data/drive-sync.json — the workflow writes them.
+
+
+CHECKING A RUN
+--------------
+Actions -> latest run -> "Download Excel files from Google Drive":
+
+    found Zone Distribution Sep 2026.xlsx  ->  outletMaster
+    found day-wise-sales.xlsx              ->  dayWiseSales
+
+"Rebuild dashboard data":
+
+    Wrote data/dashboard-data.json with 1011 outlets; sales through 2026-09-05;
+    last month (Aug 2026) matched on 1004 outlets from last-month.xlsx.
+
+A red run means Drive could not be read or a required file is missing;
+the live site keeps its last good data. The message in the log says which.
