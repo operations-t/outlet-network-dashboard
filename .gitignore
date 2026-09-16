@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+# Workbooks are downloaded from Google Drive during the build; never commit them.
+data/*.xlsx
+data/*.xlsm
