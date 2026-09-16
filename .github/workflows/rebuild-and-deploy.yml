@@ -1,0 +1,92 @@
+name: Sync Google Drive data and deploy Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    # Every 30 minutes. Only redeploys when the Drive Excel files actually changed.
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+env:
+  # Shared Drive folder holding ONLY the Excel files ("Anyone with the link – Viewer").
+  # Override with a repository variable named DRIVE_FOLDER_ID if the folder ever changes.
+  DRIVE_FOLDER_ID: ${{ vars.DRIVE_FOLDER_ID || '1mcEmZg6DV0xQzWImuNyZFPhfg4oc0YTB' }}
+  # Optional. Leave unset to use the public link.
+  GDRIVE_API_KEY: ${{ secrets.GDRIVE_API_KEY }}
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.commit.outputs.deploy }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Download Excel files from Google Drive
+        run: python scripts/fetch_drive_data.py
+
+      - name: Rebuild dashboard data
+        run: python scripts/build_dashboard_data.py
+
+      - name: Commit refreshed dashboard data
+        id: commit
+        shell: bash
+        run: |
+          git add data/dashboard-data.json data/drive-sync.json
+          if git diff --cached --quiet; then
+            echo "Drive data unchanged."
+            if [ "${{ github.event_name }}" = "schedule" ]; then
+              echo "deploy=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "deploy=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Refresh dashboard data from Google Drive [skip ci]"
+            git pull --rebase --autostash origin main
+            git push origin HEAD:main
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure GitHub Pages
+        if: steps.commit.outputs.deploy == 'true'
+        uses: actions/configure-pages@v6
+
+      - name: Upload GitHub Pages artifact
+        if: steps.commit.outputs.deploy == 'true'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: "."
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.deploy == 'true'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
