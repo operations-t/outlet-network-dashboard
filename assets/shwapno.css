@@ -303,6 +303,35 @@ input[type="date"] { color-scheme: inherit; }
 .rank-value { text-align: right; font-size: 12.5px; font-weight: 650; white-space: nowrap; }
 .scroll-y { max-height: 420px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; }
 
+/* Equal-size overview and insight panels; long content scrolls inside the body. */
+@media screen {
+  .panel:is([aria-labelledby="overseeTitle"], [aria-labelledby="divisionTitle"],
+            [aria-labelledby="mixTitle"], [aria-labelledby="locationTitle"],
+            [aria-labelledby="moversTitle"], [aria-labelledby="heatTitle"]) {
+    height: 560px;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel:is([aria-labelledby="overseeTitle"], [aria-labelledby="divisionTitle"],
+            [aria-labelledby="mixTitle"], [aria-labelledby="locationTitle"],
+            [aria-labelledby="moversTitle"], [aria-labelledby="heatTitle"]) > .panel-head {
+    flex: none;
+  }
+  .panel:is([aria-labelledby="overseeTitle"], [aria-labelledby="divisionTitle"],
+            [aria-labelledby="mixTitle"], [aria-labelledby="locationTitle"],
+            [aria-labelledby="moversTitle"], [aria-labelledby="heatTitle"]) > .panel-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    scrollbar-width: thin;
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  :is(#oversightChart, #divisionChart, #locationChart, #moversList).scroll-y {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
 /* ---------------------------------------------------------------- donuts */
 .mix-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(270px, 100%), 1fr)); gap: 20px 24px; }
 .mix h3 { font-size: 13px; font-weight: 620; margin-bottom: 10px; }
