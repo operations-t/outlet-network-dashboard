@@ -2,12 +2,12 @@
   "folderId": "1mcEmZg6DV0xQzWImuNyZFPhfg4oc0YTB",
   "folderUrl": "https://drive.google.com/drive/folders/1mcEmZg6DV0xQzWImuNyZFPhfg4oc0YTB",
   "method": "public-link",
-  "syncedAt": "2026-09-16T07:00:04Z",
+  "syncedAt": "2026-09-23T09:20:48Z",
   "files": {
     "outletMaster": {
       "driveName": "Zone Distribution Sep 2026 w location type.xlsx",
       "driveId": "1Z1bv2lEIjzoMi4SmqU512-T9KXDAfjM8",
-      "driveModified": "11:02 pm",
+      "driveModified": "Sep 15",
       "savedAs": "data/zone-distribution.xlsx",
       "bytes": 183408,
       "sha256": "b199a0ecb4a630f5cf08b01bcc9df7c296d3fb3ae58185f5193da658df4031e2"
@@ -23,10 +23,10 @@
     "dayWiseSales": {
       "driveName": "day-wise-sales.xlsx",
       "driveId": "1w6zwZaWGlfUMiNyYFLKQ1VfXmS_10G2d",
-      "driveModified": "Sep 6",
+      "driveModified": "2:19 am",
       "savedAs": "data/day-wise-sales.xlsx",
-      "bytes": 112851,
-      "sha256": "095c528d16ce2fb3cb321da3d8af1797e11cfc56d7795bb3855729ccfcb22618"
+      "bytes": 465041,
+      "sha256": "44d1c08cdf8f612d04a83049382e59894308c4691d8de8775b603a1bfa3b71e7"
     },
     "lastMonth": {
       "driveName": "last-month.xlsx",
